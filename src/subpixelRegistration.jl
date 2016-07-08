@@ -1,5 +1,10 @@
+__precompile__(true)
+
 module subpixelRegistration
 
-# package code goes here
+include("dftReg.jl")
+
+export stackDftReg,
+       alignFromDft
 
 end # module
