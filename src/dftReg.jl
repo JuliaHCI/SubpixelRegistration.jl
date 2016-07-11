@@ -12,8 +12,8 @@ function dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray
         rfzero = sumabs2(imgRef)
         rgzero = sumabs2(imgF)
         error = 1 - CCmax*conj(CCmax)/(rgzero*rfzero)
-        diffphase = atan2(imag(CCmax),real(CCmax))
-        output = Dict("error" => error, "diffphase" => diffphase)
+        #diffphase = atan2(imag(CCmax),real(CCmax))
+        output = Dict("error" => error)
     elseif usfac==1
         ## Whole-pixel shift - Compute crosscorrelation by an IFFT and locate the peak
         L = length(imgRef)
@@ -23,7 +23,7 @@ function dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray
         rfzero = sumabs2(imgRef)/L
         rgzero = sumabs2(imgF)/L
         error = abs(1 - CCmax*conj(CCmax)/(rgzero*rfzero))
-        diffphase = atan2(imag(CCmax),real(CCmax))
+        #diffphase = atan2(imag(CCmax),real(CCmax))
 
         indi = size(imgRef)
         ind2 = tuple([div(x,2) for x in indi]...)
@@ -38,7 +38,7 @@ function dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray
             end
         end
         
-        output = Dict("error"=>error,"diffphase"=>diffphase,"shift"=>shift)
+        output = Dict("error"=>error,"shift"=>shift)
     else
         ## Partial pixel shift
         
@@ -96,11 +96,11 @@ function dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray
         end
         error = 1 - CCmax*conj(CCmax)/(rg00*rf00)
         error = sqrt(abs(error))
-        diffphase = atan2(imag(CCmax),real(CCmax))
+        #diffphase = atan2(imag(CCmax),real(CCmax))
         ## If its only one row or column the shift along that dimension has no effect. Set to zero.
         shift[[div(x,2) for x in size(imgRef)].==1]=0
         
-        output = Dict("error"=>error,"diffphase"=>diffphase,"shift"=>shift)
+        output = Dict("error"=>error,"shift"=>shift)
        
     end
     output
@@ -122,7 +122,7 @@ end
 
 
 ### Shift the image
-function subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1},diffphase::Float64)
+function subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})
     sz = [size(imgft)...]
     N=0
     for i in eachindex(sz)
@@ -132,7 +132,7 @@ function subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64
     end
     
     Greg = imgft .* exp(2im*pi*N)
-    Greg = Greg .* exp(1im*diffphase)
+    #Greg = Greg .* exp(1im*diffphase)
     Greg
 end
 
@@ -162,7 +162,7 @@ function alignFromDft{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})
 
     szF = size(img2reg)[1:(N-1)]
     for i=1:size(img2reg)[N]
-        frameft = subPixShift(reshape(slicedim(img2regF,N,i),szF),dftRegRes[i]["shift"],dftRegRes[i]["diffphase"])
+        frameft = subPixShift(reshape(slicedim(img2regF,N,i),szF),dftRegRes[i]["shift"])
         imRes[((i-1)*strd+1):(i*strd)] = real(ifft(frameft))
     end
     imRes
