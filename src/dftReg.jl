@@ -1,10 +1,5 @@
 
-
-
-## Algorithm modified from the Matlab code accompanying  
-## Manuel Guizar-Sicairos, Samuel T. Thurman, and James R. Fienup, 
-##  "Efficient subpixel image registration algorithms," Opt. Lett. 33, 156-158 (2008).
-
+"Main internal function : takes the Fourier transforms of the arrays to register (`imgRef`/`imgF`) and returns a dictionary containing the residual error and the shift along the dimensions of the arrays, with the level of subpixel precision provided by `usfac`"
 function dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray{Complex{Float64},N},usfac)
     if usfac==0
         ## Compute error for no pixel shift
@@ -106,7 +101,7 @@ function dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray
     output
 end
 
-### Upsampled DFT by matrix multiplication, can compute an upsampled DFT in just a small region
+"Upsampled DFT by matrix multiplication, can compute an upsampled DFT in just a small region"
 function dftups{T,N}(inp::AbstractArray{T,N},no,usfac::Int=1,off=zeros(N))
     sz = [size(inp)...]
     permV = 1:N
@@ -121,7 +116,7 @@ function dftups{T,N}(inp::AbstractArray{T,N},no,usfac::Int=1,off=zeros(N))
 end
 
 
-### Shift the image
+"Shift the image by the amount provided in the vector `shift`."
 function subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})
     sz = [size(imgft)...]
     N=0
@@ -136,7 +131,7 @@ function subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64
     Greg
 end
 
-### dftReg applied to a full array
+"`dftReg` applied to a full array. Each array along the last dimension of `imgser` is aligned to `ref` (by default the first image of the series, with precision `ufac`. Returns an array of `Dict` containing the translation information."
 function stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10)
     if N1 != N - 1
         error("Reference image has the wrong dimensionality")
@@ -150,7 +145,8 @@ function stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}
         dftReg(ref,im,ufac)
     end
 end
- 
+
+"Given an array and a `Dict` of translations as returned by `dftReg`, returns the aligned array."
 function alignFromDft{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})
     if length(dftRegRes) != size(img2reg)[N]
         error("Alignment results and image stack dimensionalities don't match.")
