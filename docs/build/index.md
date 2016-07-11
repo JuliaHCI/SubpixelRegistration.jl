@@ -8,8 +8,8 @@
 
 ## User functions
 
-<a id='subpixelRegistration.stackDftReg' href='#subpixelRegistration.stackDftReg'>#</a>
-**`subpixelRegistration.stackDftReg`** &mdash; *Function*.
+<a id='subpixelRegistration.stackDftReg-Tuple{AbstractArray{T,N}}' href='#subpixelRegistration.stackDftReg-Tuple{AbstractArray{T,N}}'>#</a>
+**`subpixelRegistration.stackDftReg`** &mdash; *Method*.
 
 
 
@@ -17,8 +17,8 @@
 
 `dftReg` applied to a full array. Each array along the last dimension of `imgser` is aligned to `ref` (by default the first image of the series, with precision `ufac`. Returns an array of `Dict` containing the translation information.
 
-<a id='subpixelRegistration.alignFromDict' href='#subpixelRegistration.alignFromDict'>#</a>
-**`subpixelRegistration.alignFromDict`** &mdash; *Function*.
+<a id='subpixelRegistration.alignFromDict-Tuple{AbstractArray{T,N},Array{Any,1}}' href='#subpixelRegistration.alignFromDict-Tuple{AbstractArray{T,N},Array{Any,1}}'>#</a>
+**`subpixelRegistration.alignFromDict`** &mdash; *Method*.
 
 
 
@@ -31,8 +31,8 @@ Given an array and a `Dict` of translations as returned by `dftReg`, returns the
 
 ## Non exported functions
 
-<a id='subpixelRegistration.subPixShift' href='#subpixelRegistration.subPixShift'>#</a>
-**`subpixelRegistration.subPixShift`** &mdash; *Function*.
+<a id='subpixelRegistration.subPixShift-Tuple{AbstractArray{Complex{Float64},N},Array{Float64,1}}' href='#subpixelRegistration.subPixShift-Tuple{AbstractArray{Complex{Float64},N},Array{Float64,1}}'>#</a>
+**`subpixelRegistration.subPixShift`** &mdash; *Method*.
 
 
 
@@ -49,8 +49,8 @@ Shift the image `imgft` (in Fourier space) by the amount provided in the vector 
 
 Upsampled DFT by matrix multiplication, computes an upsampled DFT in just a small region. `no` is the size of the region in pixels, `offset` the position in the full array, `usfac` the upsampling parameter.
 
-<a id='subpixelRegistration.dftReg' href='#subpixelRegistration.dftReg'>#</a>
-**`subpixelRegistration.dftReg`** &mdash; *Function*.
+<a id='subpixelRegistration.dftReg-Tuple{AbstractArray{Complex{Float64},N},AbstractArray{Complex{Float64},N},Any}' href='#subpixelRegistration.dftReg-Tuple{AbstractArray{Complex{Float64},N},AbstractArray{Complex{Float64},N},Any}'>#</a>
+**`subpixelRegistration.dftReg`** &mdash; *Method*.
 
 
 
