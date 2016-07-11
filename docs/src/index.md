@@ -10,20 +10,16 @@ stackDftReg
 alignFromDict
 ```
 
-## Internals
+## Non exported functions
 
-```@meta
-CurrentModule = subpixelRegistration
+```@docs
+subpixelRegistration.subPixShift
 ```
 
 ```@docs
-subPixShift
+subpixelRegistration.dftups
 ```
 
 ```@docs
-dftups
-```
-
-```@docs
-dftReg
+subpixelRegistration.dftReg
 ```

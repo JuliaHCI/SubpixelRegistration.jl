@@ -27,11 +27,9 @@ alignFromDft{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})
 Given an array and a `Dict` of translations as returned by `dftReg`, returns the aligned array.
 
 
-<a id='Internals-1'></a>
+<a id='Non-exported-functions-1'></a>
 
-## Internals
-
-
+## Non exported functions
 
 <a id='subpixelRegistration.subPixShift' href='#subpixelRegistration.subPixShift'>#</a>
 **`subpixelRegistration.subPixShift`** &mdash; *Function*.
