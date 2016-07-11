@@ -5,6 +5,6 @@ module subpixelRegistration
 include("dftReg.jl")
 
 export stackDftReg,
-       alignFromDft
+       alignFromDict
 
 end # module
