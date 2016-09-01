@@ -145,7 +145,7 @@ end
 
 `dftReg` applied to a full array. Each array along the last dimension of `imgser` is aligned to `ref` (by default the first image of the series, with precision `ufac`. Returns an array of `Dict` containing the translation information."
 function stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10)
-    if N1 != N - 1
+    if ((N1 != (N - 1)) & (N1 != N))
         error("Reference image has the wrong dimensionality")
     end
     ref = fft(ref)
