@@ -119,57 +119,29 @@
 <strong><code>subpixelRegistration.stackDftReg</code></strong> &mdash; <em>Method</em>.</p>
 <p><code>stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10)</code></p>
 <p><code>dftReg</code> applied to a full array. Each array along the last dimension of <code>imgser</code> is aligned to <code>ref</code> (by default the first image of the series, with precision <code>ufac</code>. Returns an array of <code>Dict</code> containing the translation information.</p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/22aad6b85add7ba8da8f9a49e3b5237cf5bb0420/src/dftReg.jl#L143-147' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/c908873fd6ec12665e2796d1b37060b36d0530b4/src/dftReg.jl#L143-L147' class='documenter-source'>source</a><br></p>
 <p><a id='subpixelRegistration.alignFromDict-Tuple{AbstractArray{T,N},Array{Any,1}}' href='#subpixelRegistration.alignFromDict-Tuple{AbstractArray{T,N},Array{Any,1}}'>#</a>
 <strong><code>subpixelRegistration.alignFromDict</code></strong> &mdash; <em>Method</em>.</p>
 <p><code>alignFromDft{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})</code></p>
 <p>Given an array and a <code>Dict</code> of translations as returned by <code>dftReg</code>, returns the aligned array.</p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/22aad6b85add7ba8da8f9a49e3b5237cf5bb0420/src/dftReg.jl#L161-165' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/c908873fd6ec12665e2796d1b37060b36d0530b4/src/dftReg.jl#L161-L165' class='documenter-source'>source</a><br></p>
 <p><a id='Non-exported-functions-1'></a></p>
 <h2 id="non-exported-functions">Non exported functions</h2>
 <p><a id='subpixelRegistration.subPixShift-Tuple{AbstractArray{Complex{Float64},N},Array{Float64,1}}' href='#subpixelRegistration.subPixShift-Tuple{AbstractArray{Complex{Float64},N},Array{Float64,1}}'>#</a>
 <strong><code>subpixelRegistration.subPixShift</code></strong> &mdash; <em>Method</em>.</p>
 <p><code>subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})</code></p>
 <p>Shift the image <code>imgft</code> (in Fourier space) by the amount provided in the vector <code>shift</code>.</p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/22aad6b85add7ba8da8f9a49e3b5237cf5bb0420/src/dftReg.jl#L125-129' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/c908873fd6ec12665e2796d1b37060b36d0530b4/src/dftReg.jl#L125-L129' class='documenter-source'>source</a><br></p>
 <p><a id='subpixelRegistration.dftups' href='#subpixelRegistration.dftups'>#</a>
 <strong><code>subpixelRegistration.dftups</code></strong> &mdash; <em>Function</em>.</p>
 <p><code>dftups{T,N}(inp::AbstractArray{T,N},no,usfac::Int=1,off=zeros(N))</code></p>
 <p>Upsampled DFT by matrix multiplication, computes an upsampled DFT in just a small region. <code>no</code> is the size of the region in pixels, <code>offset</code> the position in the full array, <code>usfac</code> the upsampling parameter.</p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/22aad6b85add7ba8da8f9a49e3b5237cf5bb0420/src/dftReg.jl#L107-111' class='documenter-source'>source</a><br></p>
-<p><strong>Methods</strong></p>
-<ul class="documenter-methodtable">
-<li>
-    <pre class="documenter-inline"><span class="nf">dftups</span><span class="p">{</span><span class="n">T</span><span class="p">, </span><span class="n">N</span><span class="p">}</span><span class="p">(</span><span class="n">inp</span><span class="p">::</span><span class="n">AbstractArray{T,N}</span><span class="p">, </span><span class="n">no</span><span class="p">)</span></pre>
-    defined at
-    <a target="_blank" href="https://github.com/romainFr/subpixelRegistration.jl/tree/22aad6b85add7ba8da8f9a49e3b5237cf5bb0420/src/dftReg.jl#L112">src/dftReg.jl:112</a>
-</li>
-<li>
-    <pre><span class="nf">dftups</span><span class="p">{</span><span class="n">T</span><span class="p">, </span><span class="n">N</span><span class="p">}</span><span class="p">(</span>
-    <span class="n">inp</span><span class="p">::</span><span class="n">AbstractArray{T,N}</span><span class="p">,
-</span>    <span class="n">no</span><span class="p">,
-</span>    <span class="n">usfac</span><span class="p">::</span><span class="n">Int64</span>
-<span class="p">)</span></pre>
-    defined at
-    <a target="_blank" href="https://github.com/romainFr/subpixelRegistration.jl/tree/22aad6b85add7ba8da8f9a49e3b5237cf5bb0420/src/dftReg.jl#L112">src/dftReg.jl:112</a>
-</li>
-<li>
-    <pre><span class="nf">dftups</span><span class="p">{</span><span class="n">T</span><span class="p">, </span><span class="n">N</span><span class="p">}</span><span class="p">(</span>
-    <span class="n">inp</span><span class="p">::</span><span class="n">AbstractArray{T,N}</span><span class="p">,
-</span>    <span class="n">no</span><span class="p">,
-</span>    <span class="n">usfac</span><span class="p">::</span><span class="n">Int64</span><span class="p">,
-</span>    <span class="n">offset</span>
-<span class="p">)</span></pre>
-    defined at
-    <a target="_blank" href="https://github.com/romainFr/subpixelRegistration.jl/tree/22aad6b85add7ba8da8f9a49e3b5237cf5bb0420/src/dftReg.jl#L112">src/dftReg.jl:112</a>
-</li>
-</ul>
-
+<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/c908873fd6ec12665e2796d1b37060b36d0530b4/src/dftReg.jl#L107-L111' class='documenter-source'>source</a><br></p>
 <p><a id='subpixelRegistration.dftReg-Tuple{AbstractArray{Complex{Float64},N},AbstractArray{Complex{Float64},N},Any}' href='#subpixelRegistration.dftReg-Tuple{AbstractArray{Complex{Float64},N},AbstractArray{Complex{Float64},N},Any}'>#</a>
 <strong><code>subpixelRegistration.dftReg</code></strong> &mdash; <em>Method</em>.</p>
 <p><code>dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray{Complex{Float64},N},usfac)</code></p>
 <p>Main internal function : takes the Fourier transforms of the arrays to register as inputs (<code>imgRef</code>/<code>imgF</code>) and returns a dictionary containing the residual error and the shift along the dimensions of the arrays, with the level of subpixel precision provided by <code>usfac</code></p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/22aad6b85add7ba8da8f9a49e3b5237cf5bb0420/src/dftReg.jl#L2-6' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/c908873fd6ec12665e2796d1b37060b36d0530b4/src/dftReg.jl#L2-L6' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
@@ -208,5 +180,5 @@
 
 <!--
 MkDocs version : 0.15.3
-Build Date UTC : 2016-07-12 15:19:05.381257
+Build Date UTC : 2016-09-01 15:15:51.948700
 -->
