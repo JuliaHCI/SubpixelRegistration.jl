@@ -151,11 +151,15 @@ function stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}
     ref = fft(ref)
     imgF = fft(imgser,(1:N1...))
     
-    
-    imgF = [reshape(slicedim(imgF,N,i),size(ref)) for i = 1:size(imgF)[N]]
-    pmap(imgF) do im
-        dftReg(ref,im,ufac)
+    if N1 == (N-1)
+        imgF = [reshape(slicedim(imgF,N,i),size(ref)) for i = 1:size(imgF)[N]]
+        results = pmap(imgF) do im
+            dftReg(ref,im,ufac)
+        end
+    else
+        results = dftReg(ref,imgF,ufac)
     end
+    return results
 end
 
 "
