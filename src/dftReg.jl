@@ -167,21 +167,27 @@ end
 
 Given an array and a `Dict` of translations as returned by `dftReg`, returns the aligned array."
 function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})
-    if length(dftRegRes) != size(img2reg)[N]
+    if (length(dftRegRes) != size(img2reg)[N])
         error("Alignment results and image stack dimensionalities don't match.")
     end
-    
+
     imRes = similar(img2reg,Float64)
     img2regF = fft(img2reg,(1:(N-1)...))
     strd = stride(imRes,N)
-
     szF = size(img2reg)[1:(N-1)]
     for i=1:size(img2reg)[N]
         frameft = subPixShift(reshape(slicedim(img2regF,N,i),szF),dftRegRes[i]["shift"])
         imRes[((i-1)*strd+1):(i*strd)] = real(ifft(frameft))
     end
+    
     imRes
 end
 
 
-
+## Only a single Dict, means we expect one image of the same size
+function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Dict)
+    if (length(dftRegRes["shift"]) != N)
+        error("Alignment results and image dimensionalities don't match.")
+    end    
+    frameft = real(ifft(subPixShift(fft(img2reg),dftRegRes["shift"])))
+end
