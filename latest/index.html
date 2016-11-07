@@ -7,35 +7,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Subpixel registration of arrays through upsampled fft in julia">
   <meta name="author" content="romainFr">
-  
-  <title>subpixelRegistration.jl</title>
-  
-
   <link rel="shortcut icon" href="./img/favicon.ico">
-
-  
+  <title>Home - subpixelRegistration.jl</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="./css/theme.css" type="text/css" />
   <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
   <link rel="stylesheet" href="./css/highlight.css">
   <link href="./assets/Documenter.css" rel="stylesheet">
-
   
   <script>
     // Current page data
-    var mkdocs_page_name = "None";
+    var mkdocs_page_name = "Home";
     var mkdocs_page_input_path = "index.md";
     var mkdocs_page_url = "/";
   </script>
   
   <script src="./js/jquery-2.1.1.min.js"></script>
   <script src="./js/modernizr-2.8.3.min.js"></script>
-  <script type="text/javascript" src="./js/highlight.pack.js"></script>
-  <script src="./js/theme.js"></script> 
-  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-  <script src="./assets/mathjaxhelper.js"></script>
-
+  <script type="text/javascript" src="./js/highlight.pack.js"></script> 
   
 </head>
 
@@ -55,7 +45,7 @@
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        <ul class="current">
+	<ul class="current">
           
             <li>
     <li class="toctree-l1 current">
@@ -100,9 +90,8 @@
     <li>Home</li>
     <li class="wy-breadcrumbs-aside">
       
-        
-          <a href="https://github.com/romainFr/subpixelRegistration.jl" class="icon icon-github"> Edit on GitHub</a>
-        
+        <a href="https://github.com/romainFr/subpixelRegistration.jl/edit/master/docs/index.md"
+          class="icon icon-github"> Edit on GitHub</a>
       
     </li>
   </ul>
@@ -119,29 +108,27 @@
 <strong><code>subpixelRegistration.stackDftReg</code></strong> &mdash; <em>Method</em>.</p>
 <p><code>stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10)</code></p>
 <p><code>dftReg</code> applied to a full array. Each array along the last dimension of <code>imgser</code> is aligned to <code>ref</code> (by default the first image of the series, with precision <code>ufac</code>. Returns an array of <code>Dict</code> containing the translation information.</p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/1e85619e00d7f76694e3f0506538b8a974255aa7/src/dftReg.jl#L143-L147' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/b26d64d68fa381c5e0009b2b1dbaa08fe82b2efe/src/dftReg.jl#L143-L147' class='documenter-source'>source</a><br></p>
 <p><a id='subpixelRegistration.alignFromDict-Tuple{AbstractArray{T,N},Array{Any,1}}' href='#subpixelRegistration.alignFromDict-Tuple{AbstractArray{T,N},Array{Any,1}}'>#</a>
 <strong><code>subpixelRegistration.alignFromDict</code></strong> &mdash; <em>Method</em>.</p>
 <p><code>alignFromDft{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})</code></p>
 <p>Given an array and a <code>Dict</code> of translations as returned by <code>dftReg</code>, returns the aligned array.</p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/1e85619e00d7f76694e3f0506538b8a974255aa7/src/dftReg.jl#L165-L169' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/b26d64d68fa381c5e0009b2b1dbaa08fe82b2efe/src/dftReg.jl#L165-L169' class='documenter-source'>source</a><br></p>
 <p><a id='Non-exported-functions-1'></a></p>
 <h2 id="non-exported-functions">Non exported functions</h2>
-<p><a id='subpixelRegistration.subPixShift-Tuple{AbstractArray{Complex{Float64},N},Array{Float64,1}}' href='#subpixelRegistration.subPixShift-Tuple{AbstractArray{Complex{Float64},N},Array{Float64,1}}'>#</a>
-<strong><code>subpixelRegistration.subPixShift</code></strong> &mdash; <em>Method</em>.</p>
-<p><code>subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})</code></p>
-<p>Shift the image <code>imgft</code> (in Fourier space) by the amount provided in the vector <code>shift</code>.</p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/1e85619e00d7f76694e3f0506538b8a974255aa7/src/dftReg.jl#L125-L129' class='documenter-source'>source</a><br></p>
+<pre><code>subpixelRegistration.subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})
+</code></pre>
+
 <p><a id='subpixelRegistration.dftups' href='#subpixelRegistration.dftups'>#</a>
 <strong><code>subpixelRegistration.dftups</code></strong> &mdash; <em>Function</em>.</p>
 <p><code>dftups{T,N}(inp::AbstractArray{T,N},no,usfac::Int=1,off=zeros(N))</code></p>
 <p>Upsampled DFT by matrix multiplication, computes an upsampled DFT in just a small region. <code>no</code> is the size of the region in pixels, <code>offset</code> the position in the full array, <code>usfac</code> the upsampling parameter.</p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/1e85619e00d7f76694e3f0506538b8a974255aa7/src/dftReg.jl#L107-L111' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/b26d64d68fa381c5e0009b2b1dbaa08fe82b2efe/src/dftReg.jl#L107-L111' class='documenter-source'>source</a><br></p>
 <p><a id='subpixelRegistration.dftReg-Tuple{AbstractArray{Complex{Float64},N},AbstractArray{Complex{Float64},N},Any}' href='#subpixelRegistration.dftReg-Tuple{AbstractArray{Complex{Float64},N},AbstractArray{Complex{Float64},N},Any}'>#</a>
 <strong><code>subpixelRegistration.dftReg</code></strong> &mdash; <em>Method</em>.</p>
 <p><code>dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray{Complex{Float64},N},usfac)</code></p>
 <p>Main internal function : takes the Fourier transforms of the arrays to register as inputs (<code>imgRef</code>/<code>imgF</code>) and returns a dictionary containing the residual error and the shift along the dimensions of the arrays, with the level of subpixel precision provided by <code>usfac</code></p>
-<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/1e85619e00d7f76694e3f0506538b8a974255aa7/src/dftReg.jl#L2-L6' class='documenter-source'>source</a><br></p>
+<p><a target='_blank' href='https://github.com/romainFr/subpixelRegistration.jl/tree/b26d64d68fa381c5e0009b2b1dbaa08fe82b2efe/src/dftReg.jl#L2-L6' class='documenter-source'>source</a><br></p>
               
             </div>
           </div>
@@ -162,10 +149,10 @@
       </div>
 
     </section>
-
+    
   </div>
 
-<div class="rst-versions" role="note" style="cursor: pointer">
+  <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
           <a href="https://github.com/romainFr/subpixelRegistration.jl" class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
@@ -174,11 +161,14 @@
       
     </span>
 </div>
+    <script src="./js/theme.js"></script>
+      <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script src="./assets/mathjaxhelper.js"></script>
 
 </body>
 </html>
 
 <!--
-MkDocs version : 0.15.3
-Build Date UTC : 2016-09-02 12:20:35.143133
+MkDocs version : 0.16.0
+Build Date UTC : 2016-11-07 18:18:58
 -->
