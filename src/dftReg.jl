@@ -36,7 +36,7 @@ function dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray
             end
         end
         
-        output = Dict("error"=>error,"shift"=>shift)
+        output = Dict("error"=>error,"shift"=>shift,"diffphase"=>diffphase)
     else
         ## Partial pixel shift
         
@@ -189,5 +189,5 @@ function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Dict)
     if (length(dftRegRes["shift"]) != N)
         error("Alignment results and image dimensionalities don't match.")
     end    
-    frameft = real(ifft(subPixShift(fft(img2reg),dftRegRes["shift"])))
+    frameft = real(ifft(subPixShift(fft(img2reg),dftRegRes["shift"],dftRegRes["diffphase"])))
 end
