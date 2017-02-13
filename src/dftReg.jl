@@ -3,7 +3,7 @@
 `dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray{Complex{Float64},N},usfac)`
 
 Main internal function : takes the Fourier transforms of the arrays to register as inputs (`imgRef`/`imgF`) and returns a dictionary containing the residual error and the shift along the dimensions of the arrays, with the level of subpixel precision provided by `usfac`"
-function dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray{Complex{Float64},N},usfac)
+function dftReg{T,N}(imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Complex{T},N},usfac)
     if usfac==0
         ## Compute error for no pixel shift
         CCmax = sum(imgRef.*conj(imgF))
@@ -126,7 +126,7 @@ end
 `subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})`
 
 Shift the image `imgft` (in Fourier space) by the amount provided in the vector `shift`."
-function subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1},diffphase::Float64)
+function subPixShift{T}(imgft::AbstractArray{Complex{T}},shift::Array{Float64,1},diffphase)
     sz = [size(imgft)...]
     N=0
     for i in eachindex(sz)
