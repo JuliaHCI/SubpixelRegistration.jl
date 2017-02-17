@@ -153,7 +153,7 @@ function stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}
     
     if N1 == (N-1)
         imgF = [reshape(slicedim(imgF,N,i),size(ref)) for i = 1:size(imgF)[N]]
-        results = pmap(imgF) do im
+        results = map(imgF) do im
             dftReg(ref,im,ufac)
         end
     else
@@ -166,7 +166,7 @@ end
 `alignFromDft{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})`
 
 Given an array and a `Dict` of translations as returned by `dftReg`, returns the aligned array."
-function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})
+function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1})
     if (length(dftRegRes) != size(img2reg)[N])
         error("Alignment results and image stack dimensionalities don't match.")
     end
