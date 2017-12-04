@@ -7,8 +7,8 @@ function dftReg{T,N}(imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Com
     if usfac==0
         ## Compute error for no pixel shift
         CCmax = sum(imgRef.*conj(imgF))
-        rfzero = sumabs2(imgRef)
-        rgzero = sumabs2(imgF)
+        rfzero = sum(abs2, imgRef)
+        rgzero = sum(abs2, imgF)
         error = 1 - CCmax*conj(CCmax)/(rgzero*rfzero)
         diffphase = atan2(imag(CCmax),real(CCmax))
         output = Dict("error" => error)
@@ -16,10 +16,10 @@ function dftReg{T,N}(imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Com
         ## Whole-pixel shift - Compute crosscorrelation by an IFFT and locate the peak
         L = length(imgRef)
         CC = ifft(imgRef.*conj(imgF))
-        loc = indmax(abs(CC))
+        loc = indmax(abs.(CC))
         CCmax=CC[loc]
-        rfzero = sumabs2(imgRef)/L
-        rgzero = sumabs2(imgF)/L
+        rfzero = sum(abs2, imgRef)/L
+        rgzero = sum(abs2, imgF)/L
         error = abs(1 - CCmax*conj(CCmax)/(rgzero*rfzero))
         diffphase = atan2(imag(CCmax),real(CCmax))
 
@@ -50,7 +50,7 @@ function dftReg{T,N}(imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Com
         
         ##  Compute crosscorrelation and locate the peak 
         CC = ifft(ifftshift(CC))
-        loc = indmax(abs(CC))
+        loc = indmax(abs.(CC))
         
         indi = size(CC)
         locI = [ind2sub(indi,loc)...]
@@ -72,12 +72,12 @@ function dftReg{T,N}(imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Com
         if usfac > 2
             ### DFT Computation ###
             # Initial shift estimate in upsampled grid
-            shift = round(Integer,shift*usfac)/usfac
+            shift = round.(Integer,shift*usfac)/usfac
             dftShift = div(ceil(usfac*1.5),2) ## center of output array at dftshift+1
             ## Matrix multiplies DFT around the current shift estimate  
             CC = conj(dftups(imgF.*conj(imgRef),ceil(Integer,usfac*1.5),usfac,dftShift-shift*usfac))/(prod(ind2)*usfac^N)
             ## Locate maximum and map back to original pixel grid
-            loc = indmax(abs(CC))
+            loc = indmax(abs.(CC))
             locI = ind2sub(size(CC),loc)
             CCmax = CC[loc]
             rg00 = dftups(imgRef.*conj(imgRef),1,usfac)[1]/(prod(ind2)*usfac^N)
@@ -93,7 +93,7 @@ function dftReg{T,N}(imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Com
             rf00 = sum(imgF.*conj(imgF))/(prod(indi))
         end
         error = 1 - CCmax*conj(CCmax)/(rg00*rf00)
-        error = sqrt(abs(error))
+        error = sqrt(abs.(error))
         diffphase = atan2(imag(CCmax),real(CCmax))
         ## If its only one row or column the shift along that dimension has no effect. Set to zero.
         shift[[div(x,2) for x in size(imgRef)].==1]=0
@@ -113,9 +113,9 @@ function dftups{T,N}(inp::AbstractArray{T,N},no,usfac::Int=1,offset=zeros(N))
     permV = 1:N
     for i in permV
         inp = permutedims(inp,[i;deleteat!(collect(permV),i)])
-        kern = exp((-1im*2*pi/(sz[i]*usfac))*((0:(no-1))-offset[i])*(ifftshift(0:(sz[i]-1))-floor(sz[i]/2)).')
+        kern = exp.((-1im*2*pi/(sz[i]*usfac))*((0:(no-1))-offset[i])*(ifftshift(0:(sz[i]-1))-floor(sz[i]/2)).')
         d = size(inp)[2:N]
-        inp = kern * inp[:,:]
+        inp = kern * reshape(inp, Val{2})
         inp = reshape(inp,(no,d...))
     end
     permutedims(inp,collect(ndims(inp):-1:1))
@@ -135,7 +135,7 @@ function subPixShift{T}(imgft::AbstractArray{Complex{T}},shift::Array{Float64,1}
         N = N .- reshape(shifti,resh)
     end
     
-    Greg = imgft .* exp(2im*pi*N)
+    Greg = imgft .* exp.(2im*pi*N)
     Greg = Greg .* exp(1im*diffphase)
     Greg
 end
