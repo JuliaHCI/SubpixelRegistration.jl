@@ -1,7 +1,7 @@
-using Documenter, subpixelRegistration
+using Documenter, SubpixelRegistration
 
 makedocs(modules= subpixelRegistration)
 deploydocs(
     deps   = Deps.pip("mkdocs", "python-markdown-math"),
-    repo = "github.com/romainFr/subpixelRegistration.jl.git"
+    repo = "github.com/romainFr/SubpixelRegistration.jl.git"
 )
