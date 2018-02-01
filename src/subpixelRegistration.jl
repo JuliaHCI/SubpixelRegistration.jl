@@ -1,6 +1,6 @@
 __precompile__(true)
 
-module subpixelRegistration
+module SubpixelRegistration
 
 include("dftReg.jl")
 
