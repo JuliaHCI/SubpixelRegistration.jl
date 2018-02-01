@@ -1,5 +1,5 @@
-site_name:        subpixelRegistration.jl
-repo_url:         https://github.com/romainFr/subpixelRegistration.jl
+site_name:        SubpixelRegistration.jl
+repo_url:         https://github.com/romainFr/SubpixelRegistration.jl
 site_description: Subpixel registration of arrays through upsampled fft in julia
 site_author:      romainFr
 
