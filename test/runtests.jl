@@ -1,4 +1,4 @@
-using subpixelRegistration
+using SubpixelRegistration
 using Base.Test
 
 ## Testing the registration on a small 4d array
