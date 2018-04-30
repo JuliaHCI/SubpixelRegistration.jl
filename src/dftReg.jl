@@ -153,7 +153,7 @@ function stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}
     
     if N1 == (N-1)
         imgF = [reshape(slicedim(imgF,N,i),size(ref)) for i = 1:size(imgF)[N]]
-        results = map(imgF) do im
+        results = pmap(imgF) do im
             dftReg(ref,im,ufac)
         end
     else
