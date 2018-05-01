@@ -166,7 +166,7 @@ end
 `alignFromDft{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})`
 
 Given an array and a `Dict` of translations as returned by `dftReg`, returns the aligned array."
-function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1})
+function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1};shared=false)
     if (length(dftRegRes) != size(img2reg)[N])
         error("Alignment results and image stack dimensionalities don't match.")
     end
@@ -175,14 +175,44 @@ function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{St
     img2regF = fft(img2reg,(1:(N-1)...))
     strd = stride(imRes,N)
     szF = size(img2reg)[1:(N-1)]
-    for i=1:size(img2reg)[N]
-        frameft = subPixShift(reshape(slicedim(img2regF,N,i),szF),dftRegRes[i]["shift"],dftRegRes[i]["diffphase"])
-        imRes[((i-1)*strd+1):(i*strd)] = real(ifft(frameft))
+
+    if shared
+        imRes = SharedArray(imRes)
+        @sync begin
+        for p in procs(imRes)
+            @async remotecall_wait(alignFromDict_chunk!, p, imRes,img2regF,dftRegRes,strd,N)
+        end
     end
-    
+    else
+        for i=1:size(img2reg)[N]
+            frameft = subPixShift(reshape(slicedim(img2regF,N,i),szF),dftRegRes[i]["shift"],dftRegRes[i]["diffphase"])
+            imRes[((i-1)*strd+1):(i*strd)] = real(ifft(frameft))
+        end
+    end
     imRes
 end
 
+function stack_range{T,N}(q::SharedArray{T,N})
+    idx = indexpids(q)
+    if idx == 0 # This worker is not assigned a piece
+        return 1:0, 1:0
+    end
+    nchunks = length(procs(q))
+    splits = [round(Int, s) for s in linspace(0,size(q,N),nchunks+1)]
+    splits[idx]+1:splits[idx+1]
+end
+
+function alignFromDict_chunk!(imRes,img2regF,dftRegRes,strd,N,zrange)
+    for i in zrange
+        frameft = subPixShift(slicedim(img2regF,N,i),dftRegRes[i]["shift"],dftRegRes[i]["diffphase"])
+        imRes[((i-1)*strd+1):(i*strd)] = real(ifft(frameft))
+    end
+    imRes
+end
+
+function alignFromDict_chunk!(imRes,im2refF,dftRegRes,strd,N)
+   alignFromDict_chunk!(imRes,im2refF,dftRegRes,strd,N,stack_range(imRes))
+end
 
 ## Only a single Dict, means we expect one image of the same size
 function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Dict)
@@ -191,3 +221,6 @@ function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Dict)
     end    
     frameft = real(ifft(subPixShift(fft(img2reg),dftRegRes["shift"],dftRegRes["diffphase"])))
 end
+
+
+
