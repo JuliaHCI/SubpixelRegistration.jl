@@ -134,119 +134,14 @@
             rg00 = Array(sum(imgRef.*conj(imgRef)))/(prod(indi))
             rf00 = Array(sum(imgF.*conj(imgF),1:N1))/(prod(indi))
         end
-        error = Array(1 - CCmax*conj(CCmax))./(rg00*rf00)
+        error = Array(1 - vec(CCmax).*vec(conj(CCmax)))./vec(rg00*rf00)
         error = sqrt.(abs.(error))
         diffphase = Array(vec(atan2(imag(CCmax),real(CCmax),false)))
         ## If its only one row or column the shift along that dimension has no effect. Set to zero.
         shift[:,[div(x,2) for x in size(imgRef)].==1]=0
         output = (shift,diffphase,error)
-        println(length(output))
     end
 output
-end
-
-@afgc function dftReg{T,N}(resource::ArrayFireLibs,imgRef::AFArray{Complex{T},N},imgF::AFArray{Complex{T},N},usfac)
-    if usfac==0
-        ## Compute error for no pixel shift
-        @afgc CCmax = sum(imgRef.*conj(imgF))
-        @afgc rfzero = sum(abs2(imgRef))
-        @afgc rgzero = sum(abs2(imgF))
-        @afgc error = 1 - CCmax*conj(CCmax)/(rgzero*rfzero)
-        @afgc diffphase = atan2(imag(CCmax),real(CCmax))
-        output = error
-    elseif usfac==1
-        ## Whole-pixel shift - Compute crosscorrelation by an IFFT and locate the peak
-        L = length(imgRef)
-        @afgc CC = ifft(imgRef.*conj(imgF))
-        mm = imax_all(abs(CC))
-        loc = Int.(mm[3])+1
-        CCmax= mm[1]
-        @afgc rfzero = sum(abs2(imgRef))/L
-        @afgc rgzero = sum(abs2(imgF))/L
-        @afgc error = abs(1 - CCmax*conj(CCmax)/(rgzero*rfzero))
-        @afgc diffphase = atan2(imag(CCmax),real(CCmax))
-
-        indi = size(imgRef)
-        ind2 = tuple([div(x,2) for x in indi]...)
-        
-        locI = [ind2sub(indi,loc)...]
-        
-        shift = zeros(size(locI))
-        for i in eachindex(locI)
-            if locI[i]>ind2[i]
-                shift[i]=locI[i]-indi[i]-1
-            else shift[i]=locI[i]-1
-            end
-        end
-        
-        output = Dict("error"=>error,"shift"=>shift,"diffphase"=>diffphase)
-    else
-       
-        @afgc CC = imgRef.*conj(imgF)
-
-        @afgc CC = padAFArray(CC,N)
-        
-        ##  Compute crosscorrelation and locate the peak 
-        @afgc CC = ifft(CC)
-        @afgc mm = imax_all(abs(CC))
-        loc = Int.(mm[3])+1
-        CCmax= mm[1]
-        
-        indi = size(CC)
-        locI = [ind2sub(indi,loc)...]
-      
-        ## Obtain shift in original pixel grid from the position of the crosscorrelation peak 
-        
-        ind2 = tuple([div(x,2) for x in indi]...)
-        
-        shift = zeros(size(locI))
-        for i in eachindex(locI)
-            if locI[i]>ind2[i]
-                shift[i]=locI[i]-indi[i]-1
-            else shift[i]=locI[i]-1
-            end
-        end
-        shift = shift/2
-
-        ## If upsampling > 2, then refine estimate with matrix multiply DFT
-        if usfac > 2
-            ### DFT Computation ###
-            # Initial shift estimate in upsampled grid
-            shift = round.(Integer,shift*usfac)/usfac
-            dftShift = div(ceil(usfac*1.5),2) ## center of output array at dftshift+1
-            ## Matrix multiplies DFT around the current shift estimate  
-            @afgc CC = conj(dftups(imgF.*conj(imgRef),ceil(Integer,usfac*1.5),usfac,dftShift-shift*usfac))/(prod(ind2)*usfac^N)
-            ## Locate maximum and map back to original pixel grid
-            mm = imax_all(abs(CC))
-            loc = Int.(mm[3])+1
-            CCmax= mm[1]
-           
-            locI = ind2sub(size(CC),loc)
-           
-            #rg00 = dftups(imgRef.*conj(imgRef),1,usfac)/(prod(ind2)*usfac^N))
-            #rf00 = dftups(imgF.*conj(imgF),1,usfac)/(prod(ind2)*usfac^N))
-            
-            locI = map((x) -> x - dftShift - 1,locI)
-          
-            for i in eachindex(shift)
-                shift[i]=shift[i]+locI[i]/usfac
-            end
-          
-        else  
-            #rg00 = sum(imgRef.*conj(imgRef))/(prod(indi))
-            #rf00 = sum(imgF.*conj(imgF))/(prod(indi))
-        end
-        #error = 1 - CCmax*conj(CCmax)/(rg00*rf00)
-        #error = sqrt(abs.(error))
-        @afgc diffphase = atan2(imag(CCmax),real(CCmax))
-        ## If its only one row or column the shift along that dimension has no effect. Set to zero.
-        shift[[div(x,2) for x in size(imgRef)].==1]=0
-        
-        output = shift#Dict("shift"=>shift,"diffphase"=>diffphase)
-            #Dict("error"=>error,"shift"=>shift,"diffphase"=>diffphase)
-       
-    end
-    output
 end
 
 @afgc function padAFArray(CC,N)
@@ -271,15 +166,20 @@ function SubpixelRegistration.stackDftReg{T,N,N1}(resource::ArrayFireLibs,imgser
         chunks = [(i:min(chunkSize+i-1,size(imgF)[N])) for i in 1:chunkSize:size(imgF)[N]]
         shifts = zeros(size(imgF)[N],N1)
         diffphase = zeros(size(imgF)[N])
+        error = zeros(size(imgF)[N])
         for ch in chunks
-            shifts[ch,:],diffphase[ch] = _stackDftReg(ArrayFireLibs(),ref,AFArray(slicedim(imgF,N,ch)),ufac)
+            shifts[ch,:],diffphase[ch],error[ch] = _stackDftReg(ArrayFireLibs(),ref,AFArray(slicedim(imgF,N,ch)),ufac)
         end
-        results = (shifts,diffphase)
+        results = (shifts,diffphase,error)
     else
-        results = dftReg(ArrayFireLibs(),ref,imgser,ufac)
+        results = _stackDftReg(ArrayFireLibs(),ref,AFArray(imgF),ufac)
+    end
+    results = map(1:length(diffphase)) do i
+        Dict("shift" => shifts[i,:],"diffphase" => diffphase[i],"error"=>error[i])
     end
     return results
 end
+
 
 
 "
@@ -340,7 +240,7 @@ end
 `subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})`
 
 Shift the image `imgft` (in Fourier space) by the amount provided in the vector `shift`."
-@afgc function subPixShiftMult{T,N}(imgft::AFArray{Complex{T},N},shift::Array{Float64,2},diffphase::Array{Float64,1})
+@afgc function subPixShift{T,N}(imgft::AFArray{Complex{T},N},shift::Array{Float64,2},diffphase::Array{Float64,1})
     sz = [size(imgft)[1:(N-1)]...]
     nim = size(imgft)[N]
     Z=0
@@ -371,16 +271,15 @@ function subPixShift{T}(imgft::AFArray{Complex{T}},shift::Array{Float64,1},diffp
     Greg
 end
 
-function alignFromRes{T,N}(img2reg::AbstractArray{T,N},dftRegShift::Array{Float64,2},dftRegDP::Array{Float64,1})
-    if (size(dftRegShift,1) != size(img2reg)[N])
+function SubpixelRegistration.alignFromDict{T,N}(resource::ArrayFireLibs,img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1})
+    if (length(dftRegRes) != size(img2reg)[N])
         error("Alignment results and image stack dimensionalities don't match.")
     end
 
-    
     img2regF = fft(img2reg,(1:(N-1)...))
     szF = size(img2reg)[1:(N-1)]
     
-    imRes = subPixShiftMult(AFArray(img2regF),dftRegShift,dftRegDP)
+    imRes = subPixShift(AFArray(img2regF),SubpixelRegistration.shifts_from_res(dftRegRes),SubpixelRegistration.diffphase_from_res(dftRegRes))
 
     imRes = real(ifft(Array(imRes),1:(N-1)))
     
