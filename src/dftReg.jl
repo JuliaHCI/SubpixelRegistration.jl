@@ -12,18 +12,18 @@ function dftReg(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::Abstrac
         rfzero = sum(abs2, imgRef)
         rgzero = sum(abs2, imgF)
         error = 1 - CCmax*conj(CCmax)/(rgzero*rfzero)
-        diffphase = atan2(imag(CCmax),real(CCmax))
+        diffphase = atan(imag(CCmax),real(CCmax))
         output = Dict("error" => error)
     elseif usfac==1
         ## Whole-pixel shift - Compute crosscorrelation by an IFFT and locate the peak
         L = length(imgRef)
         CC = ifft(imgRef.*conj(imgF))
-        loc = indmax(abs.(CC))
+        loc = argmax(abs.(CC))
         CCmax=CC[loc]
         rfzero = sum(abs2, imgRef)/L
         rgzero = sum(abs2, imgF)/L
         error = abs(1 - CCmax*conj(CCmax)/(rgzero*rfzero))
-        diffphase = atan2(imag(CCmax),real(CCmax))
+        diffphase = atan(imag(CCmax),real(CCmax))
 
         indi = size(imgRef)
         ind2 = tuple([div(x,2) for x in indi]...)
@@ -52,7 +52,7 @@ function dftReg(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::Abstrac
         
         ##  Compute crosscorrelation and locate the peak 
         CC = ifft(ifftshift(CC))
-        loc = indmax(abs.(CC))
+        loc = argmax(abs.(CC))
         
         indi = size(CC)
         locI = [ind2sub(indi,loc)...]
@@ -79,7 +79,7 @@ function dftReg(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::Abstrac
             ## Matrix multiplies DFT around the current shift estimate  
             CC = conj(dftups(imgF.*conj(imgRef),ceil(Integer,usfac*1.5),usfac,dftShift-shift*usfac))/(prod(ind2)*usfac^N)
             ## Locate maximum and map back to original pixel grid
-            loc = indmax(abs.(CC))
+            loc = argmax(abs.(CC))
             locI = ind2sub(size(CC),loc)
             CCmax = CC[loc]
             rg00 = dftups(imgRef.*conj(imgRef),1,usfac)[1]/(prod(ind2)*usfac^N)
@@ -96,7 +96,7 @@ function dftReg(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::Abstrac
         end
         error = 1 - CCmax*conj(CCmax)/(rg00*rf00)
         error = sqrt(abs.(error))
-        diffphase = atan2(imag(CCmax),real(CCmax))
+        diffphase = atan(imag(CCmax),real(CCmax))
         ## If its only one row or column the shift along that dimension has no effect. Set to zero.
         shift[[div(x,2) for x in size(imgRef)].==1]=0
         

@@ -1,5 +1,5 @@
 using SubpixelRegistration
-using Base.Test
+using Test
 
 ## Testing the registration on a small 4d array
 @testset "Testing the registration on a small 4d array" begin
