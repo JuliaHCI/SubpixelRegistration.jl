@@ -1,6 +1,7 @@
 # SubpixelRegistration
 
-[![Build Status](https://travis-ci.org/romainFr/subpixelRegistration.jl.svg?branch=master)](https://travis-ci.org/romainFr/SubpixelRegistration.jl)
+[![SubpixelRegistration](http://pkg.julialang.org/badges/SubpixelRegistration_0.6.svg)](http://pkg.julialang.org/detail/SubpixelRegistration)
+[![Build Status](https://travis-ci.org/romainFr/SubpixelRegistration.jl.svg?branch=master)](https://travis-ci.org/romainFr/SubpixelRegistration.jl)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://romainFr.github.io/SubpixelRegistration.jl/latest)
 
  Algorithm modified from the [Matlab code](http://www.mathworks.com/matlabcentral/fileexchange/18401-efficient-subpixel-image-registration-by-cross-correlation) accompanying 
