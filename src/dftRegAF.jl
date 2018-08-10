@@ -155,7 +155,7 @@ end
     CC
 end
 
-function SubpixelRegistration.stackDftReg(resource::ArrayFireLibs,imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10,chunkSize=100) where {T,N,N1}
+function SubpixelRegistration.stackDftReg(resource::ArrayFireLibs,imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(selectdim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10,chunkSize=100) where {T,N,N1}
     if ((N1 != (N - 1)) & (N1 != N))
         error("Reference image has the wrong dimensionality")
     end
@@ -168,7 +168,7 @@ function SubpixelRegistration.stackDftReg(resource::ArrayFireLibs,imgser::Abstra
         diffphase = zeros(size(imgF)[N])
         error = zeros(size(imgF)[N])
         for ch in chunks
-            shifts[ch,:],diffphase[ch],error[ch] = _stackDftReg(ArrayFireLibs(),ref,AFArray(slicedim(imgF,N,ch)),ufac)
+            shifts[ch,:],diffphase[ch],error[ch] = _stackDftReg(ArrayFireLibs(),ref,AFArray(selectdim(imgF,N,ch)),ufac)
         end
         results = (shifts,diffphase,error)
     else
@@ -206,7 +206,7 @@ Upsampled DFT by matrix multiplication, computes an upsampled DFT in just a smal
             nsz=size(inp)
             d = nsz[2:Nf]
             #kern = reorder(AFArray(repeat(kern,outer=(1,1,nsz[1]))),0,2,1,4)
-            @afgc inp = kern * reshape(inp, Val{2})
+            @afgc inp = kern * reshape(inp, Val(2))
             @afgc inp = reshape(inp,no,d...)
         end
     else

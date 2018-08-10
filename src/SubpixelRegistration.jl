@@ -1,6 +1,6 @@
 module SubpixelRegistration
 
-using ComputationalResources
+using ComputationalResources, FFTW, Distributed
 
 function __init__()
     # Enable `using` to load additional modules in this folder

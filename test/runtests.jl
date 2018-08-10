@@ -1,12 +1,13 @@
 using SubpixelRegistration
+using FFTW
 using Test
 
 ## Testing the registration on a small 4d array
 @testset "Testing the registration on a small 4d array" begin
     test4d = zeros(40,40,20,2)
 
-    test4d[10:20,10:20,2:10,1] = 1
-    test4d[5:15,15:25,5:13,2] = 1
+    test4d[10:20,10:20,2:10,1] .= 1
+    test4d[5:15,15:25,5:13,2] .= 1
 
 
     ## No subpixel resolution

@@ -28,7 +28,8 @@ function dftReg(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::Abstrac
         indi = size(imgRef)
         ind2 = tuple([div(x,2) for x in indi]...)
         
-        locI = [ind2sub(indi,loc)...]
+        #locI = [ind2sub(indi,loc)...]
+        locI = [Tuple(loc)...]
         
         shift = zeros(size(locI))
         for i in eachindex(locI)
@@ -55,7 +56,8 @@ function dftReg(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::Abstrac
         loc = argmax(abs.(CC))
         
         indi = size(CC)
-        locI = [ind2sub(indi,loc)...]
+        #locI = [ind2sub(indi,loc)...]
+        locI = [Tuple(loc)...]
         CCmax = CC[loc]
         ## Obtain shift in original pixel grid from the position of the crosscorrelation peak 
         
@@ -77,10 +79,11 @@ function dftReg(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::Abstrac
             shift = round.(Integer,shift*usfac)/usfac
             dftShift = div(ceil(usfac*1.5),2) ## center of output array at dftshift+1
             ## Matrix multiplies DFT around the current shift estimate  
-            CC = conj(dftups(imgF.*conj(imgRef),ceil(Integer,usfac*1.5),usfac,dftShift-shift*usfac))/(prod(ind2)*usfac^N)
+            CC = conj(dftups(imgF.*conj(imgRef),ceil(Integer,usfac*1.5),usfac,dftShift.-shift*usfac))/(prod(ind2)*usfac^N)
             ## Locate maximum and map back to original pixel grid
             loc = argmax(abs.(CC))
-            locI = ind2sub(size(CC),loc)
+            # locI = ind2sub(size(CC),loc)
+            locI = Tuple(loc)
             CCmax = CC[loc]
             rg00 = dftups(imgRef.*conj(imgRef),1,usfac)[1]/(prod(ind2)*usfac^N)
             rf00 = dftups(imgF.*conj(imgF),1,usfac)[1]/(prod(ind2)*usfac^N)
@@ -98,7 +101,7 @@ function dftReg(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::Abstrac
         error = sqrt(abs.(error))
         diffphase = atan(imag(CCmax),real(CCmax))
         ## If its only one row or column the shift along that dimension has no effect. Set to zero.
-        shift[[div(x,2) for x in size(imgRef)].==1]=0
+        shift[[div(x,2) for x in size(imgRef)].==1].=0
         
         output = Dict("error"=>error,"shift"=>shift,"diffphase"=>diffphase)
        
@@ -115,9 +118,9 @@ function dftups(inp::AbstractArray{T,N},no,usfac::Int=1,offset=zeros(N)) where {
     permV = 1:N
     for i in permV
         inp = permutedims(inp,[i;deleteat!(collect(permV),i)])
-        kern = exp.((-1im*2*pi/(sz[i]*usfac))*((0:(no-1))-offset[i])*transpose(ifftshift(0:(sz[i]-1))-floor(sz[i]/2)))
+        kern = exp.((-1im*2*pi/(sz[i]*usfac))*((0:(no-1)).-offset[i])*transpose(ifftshift(0:(sz[i]-1)).-floor(sz[i]/2)))
         d = size(inp)[2:N]
-        inp = kern * reshape(inp, Val{2})
+        inp = kern * reshape(inp, Val(2))
         inp = reshape(inp,(no,d...))
     end
     permutedims(inp,collect(ndims(inp):-1:1))
@@ -158,14 +161,14 @@ function subPixShift(imgft::AbstractArray{Complex{T}},shift::Array{Float64,1},di
     Greg
 end
 
-function stackDftReg(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10) where {T,N,N1}
+function stackDftReg(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(selectdim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10) where {T,N,N1}
     stackDftReg(CPU1(),imgser,ref=ref,ufac=ufac) 
 end
 "
 `stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10)`
 
 `dftReg` applied to a full array. Each array along the last dimension of `imgser` is aligned to `ref` (by default the first image of the series, with precision `ufac`. Returns an array of `Dict` containing the translation information."
-function stackDftReg(resource::CPU1,imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10) where {T,N,N1}
+function stackDftReg(resource::CPU1,imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(selectdim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10) where {T,N,N1}
     if ((N1 != (N - 1)) & (N1 != N))
         error("Reference image has the wrong dimensionality")
     end
@@ -173,7 +176,7 @@ function stackDftReg(resource::CPU1,imgser::AbstractArray{T,N};ref::AbstractArra
     imgF = fft(imgser,(1:N1...,))
     
     if N1 == (N-1)
-        imgF = [reshape(slicedim(imgF,N,i),size(ref)) for i = 1:size(imgF)[N]]
+        imgF = [reshape(selectdim(imgF,N,i),size(ref)) for i = 1:size(imgF)[N]]
         results = pmap(imgF) do im
             dftReg(ref,im,ufac)
         end
