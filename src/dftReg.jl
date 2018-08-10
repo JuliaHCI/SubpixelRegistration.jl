@@ -1,10 +1,11 @@
-dftReg{T,N}(imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Complex{T},N},usfac)=dftReg(CPU1(),imgRef,imgF,usfac)
-
+function dftReg(imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Complex{T},N},usfac) where {T, N}
+    dftReg(CPU1(),imgRef,imgF,usfac) 
+end
 "
 `dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray{Complex{Float64},N},usfac)`
 
 Main internal function : takes the Fourier transforms of the arrays to register as inputs (`imgRef`/`imgF`) and returns a dictionary containing the residual error and the shift along the dimensions of the arrays, with the level of subpixel precision provided by `usfac`"
-function dftReg{T,N}(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Complex{T},N},usfac)
+function dftReg(resource::CPU1,imgRef::AbstractArray{Complex{T},N},imgF::AbstractArray{Complex{T},N},usfac) where {T, N}
     if usfac==0
         ## Compute error for no pixel shift
         CCmax = sum(imgRef.*conj(imgF))
@@ -109,12 +110,12 @@ end
 `dftups{T,N}(inp::AbstractArray{T,N},no,usfac::Int=1,off=zeros(N))`
 
 Upsampled DFT by matrix multiplication, computes an upsampled DFT in just a small region. `no` is the size of the region in pixels, `offset` the position in the full array, `usfac` the upsampling parameter."
-function dftups{T,N}(inp::AbstractArray{T,N},no,usfac::Int=1,offset=zeros(N))
+function dftups(inp::AbstractArray{T,N},no,usfac::Int=1,offset=zeros(N)) where {T,N}
     sz = [size(inp)...]
     permV = 1:N
     for i in permV
         inp = permutedims(inp,[i;deleteat!(collect(permV),i)])
-        kern = exp.((-1im*2*pi/(sz[i]*usfac))*((0:(no-1))-offset[i])*(ifftshift(0:(sz[i]-1))-floor(sz[i]/2)).')
+        kern = exp.((-1im*2*pi/(sz[i]*usfac))*((0:(no-1))-offset[i])*transpose(ifftshift(0:(sz[i]-1))-floor(sz[i]/2)))
         d = size(inp)[2:N]
         inp = kern * reshape(inp, Val{2})
         inp = reshape(inp,(no,d...))
@@ -125,10 +126,8 @@ end
 
 "
 `subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})`
-
     Shift the image `imgft` (in Fourier space) by the amount provided in the vector `shift`."
-
-function subPixShift{T,N}(imgft::AbstractArray{Complex{T},N},shift::Array{Float64,2},diffphase::Array{Float64,1})
+function subPixShift(imgft::AbstractArray{Complex{T},N},shift::Array{Float64,2},diffphase::Array{Float64,1}) where {T,N}
     sz = [size(imgft)[1:(N-1)]...]
     nim = size(imgft)[N]
     Z=0
@@ -145,7 +144,7 @@ function subPixShift{T,N}(imgft::AbstractArray{Complex{T},N},shift::Array{Float6
     Greg
 end
 
-function subPixShift{T}(imgft::AbstractArray{Complex{T}},shift::Array{Float64,1},diffphase)
+function subPixShift(imgft::AbstractArray{Complex{T}},shift::Array{Float64,1},diffphase) where {T}
     sz = [size(imgft)...]
     N=0
     for i in eachindex(sz)
@@ -159,18 +158,19 @@ function subPixShift{T}(imgft::AbstractArray{Complex{T}},shift::Array{Float64,1}
     Greg
 end
 
-stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10)=stackDftReg(CPU1(),imgser,ref=ref,ufac=ufac)
-
+function stackDftReg(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10) where {T,N,N1}
+    stackDftReg(CPU1(),imgser,ref=ref,ufac=ufac) 
+end
 "
 `stackDftReg{T,N,N1}(imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10)`
 
 `dftReg` applied to a full array. Each array along the last dimension of `imgser` is aligned to `ref` (by default the first image of the series, with precision `ufac`. Returns an array of `Dict` containing the translation information."
-function stackDftReg{T,N,N1}(resource::CPU1,imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10)
+function stackDftReg(resource::CPU1,imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10) where {T,N,N1}
     if ((N1 != (N - 1)) & (N1 != N))
         error("Reference image has the wrong dimensionality")
     end
     ref = fft(ref)
-    imgF = fft(imgser,(1:N1...))
+    imgF = fft(imgser,(1:N1...,))
     
     if N1 == (N-1)
         imgF = [reshape(slicedim(imgF,N,i),size(ref)) for i = 1:size(imgF)[N]]
@@ -187,14 +187,16 @@ end
 `alignFromDft{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})`
 
 Given an array and a `Dict` of translations as returned by `dftReg`, returns the aligned array."
-alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1})=alignFromDict(CPU1(),img2reg,dftRegRes)
+function alignFromDict(img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1}) where {T,N}
+    alignFromDict(CPU1(),img2reg,dftRegRes)
+end
 
-function alignFromDict{T,N}(resource::CPU1,img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1})
+function alignFromDict(resource::CPU1,img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1}) where {T,N}
     if (length(dftRegRes) != size(img2reg)[N])
         error("Alignment results and image stack dimensionalities don't match.")
     end
 
-    img2regF = fft(img2reg,(1:(N-1)...))
+    img2regF = fft(img2reg,(1:(N-1)...,))
     szF = size(img2reg)[1:(N-1)]
 
     imRes = subPixShift(img2regF,shifts_from_res(dftRegRes),diffphase_from_res(dftRegRes))
@@ -204,7 +206,7 @@ function alignFromDict{T,N}(resource::CPU1,img2reg::AbstractArray{T,N},dftRegRes
 end
 
 ## Only a single Dict, means we expect one image of the same size
-function alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Dict)
+function alignFromDict(img2reg::AbstractArray{T,N},dftRegRes::Dict) where {T,N}
     if (length(dftRegRes["shift"]) != N)
         error("Alignment results and image dimensionalities don't match.")
     end    
