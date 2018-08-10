@@ -1,0 +1,15 @@
+name = "SubpixelRegistration"
+uuid = "97a7e826-69e2-510e-8af8-254736c4b599"
+author = ["Romain Franconville <romain.franconville@protonmail.com>"]
+repo = "https://github.com/romainFr/SubpixelRegistration.jl.git"
+
+[deps]
+ComputationalResources = "ed09eef8-17a6-5b46-8889-db040fac31e3"
+Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
