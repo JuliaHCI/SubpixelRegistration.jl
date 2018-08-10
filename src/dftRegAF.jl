@@ -1,5 +1,5 @@
 
-@afgc function _stackDftReg{T,N,N1}(resource::ArrayFireLibs,imgRef::AFArray{Complex{T},N1},imgF::AFArray{Complex{T},N},usfac)
+@afgc function _stackDftReg(resource::ArrayFireLibs,imgRef::AFArray{Complex{T},N1},imgF::AFArray{Complex{T},N},usfac) where {T,N,N1}
     if N1 != (N - 1)
         error("Reference image has the wrong dimensionality")
     end
@@ -155,12 +155,12 @@ end
     CC
 end
 
-function SubpixelRegistration.stackDftReg{T,N,N1}(resource::ArrayFireLibs,imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10,chunkSize=100)
+function SubpixelRegistration.stackDftReg(resource::ArrayFireLibs,imgser::AbstractArray{T,N};ref::AbstractArray{T,N1}=reshape(slicedim(imgser,N,1),size(imgser)[1:(N-1)]),ufac::Int=10,chunkSize=100) where {T,N,N1}
     if ((N1 != (N - 1)) & (N1 != N))
         error("Reference image has the wrong dimensionality")
     end
     @afgc ref = fft(AFArray(ref))
-    imgF = fft(imgser,(1:N1...))
+    imgF = fft(imgser,(1:N1...,))
     
     if N1 == (N-1)
         chunks = [(i:min(chunkSize+i-1,size(imgF)[N])) for i in 1:chunkSize:size(imgF)[N]]
@@ -240,7 +240,7 @@ end
 `subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})`
 
 Shift the image `imgft` (in Fourier space) by the amount provided in the vector `shift`."
-@afgc function subPixShift{T,N}(imgft::AFArray{Complex{T},N},shift::Array{Float64,2},diffphase::Array{Float64,1})
+@afgc function subPixShift(imgft::AFArray{Complex{T},N},shift::Array{Float64,2},diffphase::Array{Float64,1}) where {T,N}
     sz = [size(imgft)[1:(N-1)]...]
     nim = size(imgft)[N]
     Z=0
@@ -257,7 +257,7 @@ Shift the image `imgft` (in Fourier space) by the amount provided in the vector 
     Greg
 end
 
-function subPixShift{T}(imgft::AFArray{Complex{T}},shift::Array{Float64,1},diffphase)
+function subPixShift(imgft::AFArray{Complex{T}},shift::Array{Float64,1},diffphase) where {T}
     sz = [size(imgft)...]
     N=0
     for i in eachindex(sz)
@@ -271,12 +271,12 @@ function subPixShift{T}(imgft::AFArray{Complex{T}},shift::Array{Float64,1},diffp
     Greg
 end
 
-function SubpixelRegistration.alignFromDict{T,N}(resource::ArrayFireLibs,img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1})
+function SubpixelRegistration.alignFromDict(resource::ArrayFireLibs,img2reg::AbstractArray{T,N},dftRegRes::Array{Dict{String,Any},1}) where {T,N}
     if (length(dftRegRes) != size(img2reg)[N])
         error("Alignment results and image stack dimensionalities don't match.")
     end
 
-    img2regF = fft(img2reg,(1:(N-1)...))
+    img2regF = fft(img2reg,(1:(N-1)...,))
     szF = size(img2reg)[1:(N-1)]
     
     imRes = subPixShift(AFArray(img2regF),SubpixelRegistration.shifts_from_res(dftRegRes),SubpixelRegistration.diffphase_from_res(dftRegRes))
