@@ -1,6 +1,7 @@
 # SubpixelRegistration
 
 [![SubpixelRegistration](http://pkg.julialang.org/badges/SubpixelRegistration_0.6.svg)](http://pkg.julialang.org/detail/SubpixelRegistration)
+[![SubpixelRegistration](http://pkg.julialang.org/badges/SubpixelRegistration_0.7.svg)](http://pkg.julialang.org/detail/SubpixelRegistration)
 [![Build Status](https://travis-ci.org/romainFr/SubpixelRegistration.jl.svg?branch=master)](https://travis-ci.org/romainFr/SubpixelRegistration.jl)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://romainFr.github.io/SubpixelRegistration.jl/latest)
 
