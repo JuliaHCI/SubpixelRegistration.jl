@@ -38,8 +38,6 @@ function phase_register(source, target; upsample_factor=1)
     sample_region_offset = @. dftshift - shifts * upsample_factor
     cross_correlation = upsampled_dft!(image_product, upsample_region_size, upsample_factor, sample_region_offset)
     maxima, maxidx = findmax(abs, cross_correlation)
-    @show maxidx.I
-    @info @. (maxidx.I - dftshift - 1) / upsample_factor
     shifts = @. shifts + (maxidx.I - dftshift - 1) / upsample_factor
 
     @info "found final shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
@@ -57,28 +55,12 @@ function upsampled_dft!(data::AbstractArray{T,N}, upsample_region_size, upsample
     kernel = @. exp(-im2pi * freqmat)
 
     _data = kernel * data'
-    @show _data
 
     freqs = fftfreq(size(data, 1), inv(upsample_factor))
     freqmat = @. (shiftrange' - axis_offsets[1] - 1) * freqs
     kernel = @. exp(-im2pi * freqmat)
     _data = kernel' * _data'
-    @show _data
     return _data
-
-    # for (n, ax_off) in zip(reverse(size(data)), reverse(axis_offsets))
-    #     freqs = fftfreq(n, 1/upsample_factor)
-    #     @show upsample_region_size
-    #     @show ax_off
-    #     @show (shiftrange .- ax_off .- 1)
-    #     @show freqs
-
-    #     kernel = @. exp(-im2pi * (shiftrange - ax_off - 1) * freqs')
-
-    #     data = kernel * data'
-    #     @show data
-    # end
-    # return data
 end
 
 
