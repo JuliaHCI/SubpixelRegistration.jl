@@ -3,11 +3,15 @@ uuid = "1a43b145-6475-47df-bc6c-07846d7f629f"
 authors = ["Miles Lucas <mdlucas@hawaii.edu> and contributors"]
 version = "0.1.0"
 
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+[deps]
+AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+FFTW = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
 
 [compat]
 julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test"]
