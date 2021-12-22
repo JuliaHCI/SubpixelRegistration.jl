@@ -2,6 +2,7 @@ module SubpixelRegistration
 
 using AbstractFFTs
 using FFTW
+using Statistics
 
 function phase_register(source, target; upsample_factor=1)
 
@@ -24,17 +25,68 @@ function phase_register(source, target; upsample_factor=1)
     shifts = maxidx.I
     shifts = @. ifelse(shifts > midpoints, shifts - shape, shifts) - 1.0
 
-    @info "found shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
+    @info "found initial shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
+
+    isone(upsample_factor) && return shifts
+
+    # upsample with matrix-multiply DFT
+    shifts = @. round(shifts * upsample_factor) / upsample_factor
+    upsample_region_size = ceil(upsample_factor * 1.5)
+    # center of output array at dftshift + 1
+    dftshift = div(upsample_region_size, 2)
+    # matmul DFT
+    sample_region_offset = @. dftshift - shifts * upsample_factor
+    cross_correlation = upsampled_dft!(image_product, upsample_region_size, upsample_factor, sample_region_offset)
+    maxima, maxidx = findmax(abs, cross_correlation)
+    @show maxidx.I
+    @info @. (maxidx.I - dftshift - 1) / upsample_factor
+    shifts = @. shifts + (maxidx.I - dftshift - 1) / upsample_factor
+
+    @info "found final shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
 
     return shifts
 end
 
+using Tullio
+
+function upsampled_dft!(data::AbstractArray{T,N}, upsample_region_size, upsample_factor, axis_offsets) where {T<:Complex,N}
+    im2pi = T(0, 2π)
+    shiftrange = 1:upsample_region_size
+    freqs = fftfreq(size(data, 2), inv(upsample_factor))
+    freqmat = @. (shiftrange - axis_offsets[2] - 1) * freqs'
+    kernel = @. exp(-im2pi * freqmat)
+
+    _data = kernel * data'
+    @show _data
+
+    freqs = fftfreq(size(data, 1), inv(upsample_factor))
+    freqmat = @. (shiftrange' - axis_offsets[1] - 1) * freqs
+    kernel = @. exp(-im2pi * freqmat)
+    _data = kernel' * _data'
+    @show _data
+    return _data
+
+    # for (n, ax_off) in zip(reverse(size(data)), reverse(axis_offsets))
+    #     freqs = fftfreq(n, 1/upsample_factor)
+    #     @show upsample_region_size
+    #     @show ax_off
+    #     @show (shiftrange .- ax_off .- 1)
+    #     @show freqs
+
+    #     kernel = @. exp(-im2pi * (shiftrange - ax_off - 1) * freqs')
+
+    #     data = kernel * data'
+    #     @show data
+    # end
+    # return data
+end
+
+
+
 function calculate_stats(crosscor_maxima, source_freq, target_freq)
-    source_amp = sum(real.(source_freq .* source_freq'))
-    source_amp /= length(source_freq)
-    target_amp = sum(real.(target_freq .* target_freq'))
-    target_amp /= length(target_freq)
-    error = 1 - crosscor_maxima .* crosscor_maxima' / (source_amp * target_amp)
+    source_amp = mean(abs2, source_freq)
+    target_amp = mean(abs2, target_freq)
+    error = abs(1 - crosscor_maxima * crosscor_maxima' / (source_amp * target_amp))
     phasediff = atan(imag(crosscor_maxima), real(crosscor_maxima))
     return (; error, phasediff)
 end
