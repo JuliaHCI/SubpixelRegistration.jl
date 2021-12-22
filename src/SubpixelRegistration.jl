@@ -22,10 +22,9 @@ function phase_register(source, target; upsample_factor=1)
     midpoints = map(ax -> (first(ax) + last(ax)) / 2, axes(source_freq))
 
     shape = size(source_freq)
-    shifts = maxidx.I
-    shifts = @. ifelse(shifts > midpoints, shifts - shape, shifts) - 1.0
+    shifts = @. ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - 1.0
 
-    @info "found initial shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
+    @debug "found initial shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
 
     isone(upsample_factor) && return shifts
 
@@ -36,34 +35,28 @@ function phase_register(source, target; upsample_factor=1)
     dftshift = div(upsample_region_size, 2)
     # matmul DFT
     sample_region_offset = @. dftshift - shifts * upsample_factor
-    cross_correlation = upsampled_dft!(image_product, upsample_region_size, upsample_factor, sample_region_offset)
+    cross_correlation = upsampled_dft(image_product, upsample_region_size, upsample_factor, sample_region_offset)
     maxima, maxidx = findmax(abs, cross_correlation)
     shifts = @. shifts + (maxidx.I - dftshift - 1) / upsample_factor
 
-    @info "found final shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
+    @debug "found final shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
 
     return shifts
 end
 
-using Tullio
-
-function upsampled_dft!(data::AbstractArray{T,N}, upsample_region_size, upsample_factor, axis_offsets) where {T<:Complex,N}
+function upsampled_dft(data::AbstractArray{T,N}, upsample_region_size, upsample_factor, axis_offsets) where {T<:Complex,N}
     im2pi = T(0, 2π)
     shiftrange = 1:upsample_region_size
     freqs = fftfreq(size(data, 2), inv(upsample_factor))
-    freqmat = @. (shiftrange - axis_offsets[2] - 1) * freqs'
-    kernel = @. exp(-im2pi * freqmat)
+    kernel = @. exp(-im2pi * (shiftrange - axis_offsets[2] - 1) * freqs')
 
     _data = kernel * data'
 
     freqs = fftfreq(size(data, 1), inv(upsample_factor))
-    freqmat = @. (shiftrange' - axis_offsets[1] - 1) * freqs
-    kernel = @. exp(-im2pi * freqmat)
+    kernel = @. exp(-im2pi * (shiftrange' - axis_offsets[1] - 1) * freqs)
     _data = kernel' * _data'
     return _data
 end
-
-
 
 function calculate_stats(crosscor_maxima, source_freq, target_freq)
     source_amp = mean(abs2, source_freq)
