@@ -121,12 +121,17 @@ function register(reference, target; kwargs...)
     return real(plan \ shifted)
 end
 
-function coregister!(cube::AbstractArray; dims, kwargs...)
+function coregister!(cube::AbstractArray; dims, reference=firstindex(cube, dims), kwargs...)
+    reference = selectdim(cube, dims, reference)
+    plan = plan_fft(reference)
+    reference_freq = plan * reference
     @inbounds for idx in axes(cube, dims)[begin + 1:end]
-        reference = selectdim(cube, dims, idx - 1)
         target = selectdim(cube, dims, idx)
+        target_freq = plan * target
+        shift = phase_offset(plan, reference_freq, target_freq; kwargs...)
         # target is a view, update inplace
-        target .= register(reference, target; kwargs...)
+        fourier_shift!(target_freq, shift)
+        target .= real.(plan \ target_freq)
     end
     return cube
 end
