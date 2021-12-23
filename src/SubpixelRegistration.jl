@@ -4,6 +4,8 @@ using AbstractFFTs
 using FFTW
 using Statistics
 
+export phase_register
+
 """
     phase_register(source, target; upsample_factor=1)
 
