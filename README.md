@@ -10,9 +10,7 @@
 
 Image registration with subpixel precision using an upsampled discrete Fourier transform cross-correlation. This uses an efficient matrix-multiplication algorithm for upsampling the cross-correlation following Guizar-Sicairos, Thurman, and Fienup (2008).[^1]
 
-## Referencnes
-
-> [^1]: Guizar-Sicairos, Thurman, and Fienup, 2008, ["Efficient subpixel image registration algorithms"](http://www.opticsinfobase.org/ol/fulltext.cfm?uri=ol-33-2-156&id=148843)
+[^1]: Manuel Guizar-Sicairos, Samuel T. Thurman, and James R. Fienup, ["Efficient subpixel image registration algorithms,"](http://www.opticsinfobase.org/ol/fulltext.cfm?uri=ol-33-2-156&id=148843) Opt. Lett. 33, 156-158 (2008)
 
 ## Installation
 
