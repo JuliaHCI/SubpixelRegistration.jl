@@ -9,19 +9,40 @@ export phase_offset, register, coregister, coregister!, fourier_shift
 """
     phase_offset(source, target; upsample_factor=1)
 
-Return the shift between `source` and `target` by measuring the maximum in the cross-correlation between the images. This algorithm can achieve `1/upsample_factor` precision by locally upsampling the cross-correlation via a matrix-multiplication DFT.
+Return the shift between `source` and `target` by measuring the maximum in the cross-correlation between the images. This algorithm can achieve `1/upsample_factor` precision by locally upsampling the cross-correlation via a matrix-multiplication DFT.[^1]
 
 # Examples
 
-# References
+```jldoctest
+julia> image = reshape(1.0:100.0, 10, 10);
 
-1. 
+julia> shift = (-1.6, 2.8)
+(-1.6, 2.8)
+
+julia> target = fourier_shift(image, shift);
+
+julia> phase_offset(image, target)
+(2.0, -3.0)
+
+julia> phase_offset(image, target; upsample_factor=5)
+(1.8, -2.8)
+
+julia> @. isapprox(ans, -1 * shift, atol=1/5)
+(true, true)
+```
+
+[^1]: Manuel Guizar-Sicairos, Samuel T. Thurman, and James R. Fienup, ["Efficient subpixel image registration algorithms,"](http://www.opticsinfobase.org/ol/fulltext.cfm?uri=ol-33-2-156&id=148843) Opt. Lett. 33, 156-158 (2008)
 """
 function phase_offset(source, target; kwargs...)
     plan = plan_fft(source)
     return phase_offset(plan, plan * source, plan * target; kwargs...)
 end
 
+"""
+    phase_offset(plan, source_freq, target_freq; upsample_factor=1)
+
+Returns the phase shift between the two images which have already been Fourier transformed with the given `plan`.
+"""
 function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_freq; upsample_factor=1) where T
     # whole-pixel shift
     # compute cross-correlation via iFFT
@@ -113,16 +134,55 @@ function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift)
     return image_freq
 end
 
-function register(reference, target; kwargs...)
-    plan = plan_fft(reference)
+"""
+    register(source, target; upsample_factor=1)
+
+Register `target` image to `source` image by first finding the phase offset ([`phase_offset`](@ref)), and then Fourier shifting `target` with [`fourier_shift`](@ref).
+
+# Examples
+
+```jldoctest
+julia> image = reshape(1.0:100.0, 10, 10);
+
+julia> shift = (-1.6, 2.8)
+(-1.6, 2.8)
+
+julia> target = fourier_shift(image, shift);
+
+julia> target_shift = register(image, target; upsample_factor=5);
+```
+
+# See also
+[`phase_offset`](@ref)
+"""
+function register(source, target; kwargs...)
+    plan = plan_fft(source)
     target_freq = plan * target
-    shift = phase_offset(plan, plan * reference, target_freq; kwargs...)
+    shift = phase_offset(plan, plan * source, target_freq; kwargs...)
     shifted = fourier_shift!(target_freq, shift)
     return real(plan \ shifted)
 end
 
-function coregister!(cube::AbstractArray; dims, reference=firstindex(cube, dims), kwargs...)
-    reference = selectdim(cube, dims, reference)
+"""
+    coregister(cube; dims, refidx=firstindex(cube, dims), upsample_factor=1)
+
+Coregister a cube of data along `dims`, using the `refidx` slice as the reference frame. Other keyword arguments will be passed to [`phase_offset`](@ref)
+
+# See also
+[`coregister!`](@ref)
+"""
+coregister(cube::AbstractArray; kwargs...) = coregister!(copy(cube); kwargs...)
+
+"""
+    coregister!(cube; dims, kwargs...)
+
+Coregister slices in `cube`, modifyingn it inplace.
+
+# See also
+[`coregister`](@ref)
+"""
+function coregister!(cube::AbstractArray; dims, refidx=firstindex(cube, dims), kwargs...)
+    reference = selectdim(cube, dims, refidx)
     plan = plan_fft(reference)
     reference_freq = plan * reference
     @inbounds for idx in axes(cube, dims)[begin + 1:end]
@@ -135,6 +195,5 @@ function coregister!(cube::AbstractArray; dims, reference=firstindex(cube, dims)
     end
     return cube
 end
-coregister(cube::AbstractArray; kwargs...) = coregister!(copy(cube); kwargs...)
 
 end
