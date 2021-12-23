@@ -63,15 +63,14 @@ end
 Calculate the cross-correlation in a region of size `region_size` via an upsampled DFT. The DFT uses matrix-multiplication to super-sample the input by `upsample_factor`. The frequencies will be shifted and centered around `offsets`.
 """
 function upsampled_dft(data::AbstractMatrix{T}, region_size, upsample_factor, offsets) where {T<:Complex}
-    im2pi = T(0, 2π)
     shiftrange = 1:region_size
     freqs = fftfreq(size(data, 2), inv(upsample_factor))
-    kernel = @. exp(-im2pi * (shiftrange - offsets[2] - 1) * freqs')
+    kernel = @. cis(-2π * (shiftrange - offsets[2] - 1) * freqs')
 
     _data = kernel * data'
 
     freqs = fftfreq(size(data, 1), inv(upsample_factor))
-    kernel = @. exp(im2pi * (shiftrange - offsets[1] - 1) * freqs')
+    kernel = @. cis(2π * (shiftrange - offsets[1] - 1) * freqs')
     _data = kernel * _data'
     return _data
 end
@@ -110,7 +109,7 @@ function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift)
     
     freqs1 = fftfreq(shape[1])'
     freqs2 = fftfreq(shape[2])
-    @. image_freq *= exp(-im * 2π * (freqs1 * shift[1] + freqs2 * shift[2]))
+    @. image_freq *= cis(-2π * (freqs1 * shift[1] + freqs2 * shift[2]))
     return image_freq
 end
 
