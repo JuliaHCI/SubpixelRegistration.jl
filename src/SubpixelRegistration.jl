@@ -4,10 +4,10 @@ using AbstractFFTs
 using FFTW
 using Statistics
 
-export phase_register
+export phase_offset, register, coregister, coregister!, fourier_shift
 
 """
-    phase_register(source, target; upsample_factor=1)
+    phase_offset(source, target; upsample_factor=1)
 
 Return the shift between `source` and `target` by measuring the maximum in the cross-correlation between the images. This algorithm can achieve `1/upsample_factor` precision by locally upsampling the cross-correlation via a matrix-multiplication DFT.
 
@@ -17,11 +17,12 @@ Return the shift between `source` and `target` by measuring the maximum in the c
 
 1. 
 """
-function phase_register(source, target; kwargs...)
+function phase_offset(source, target; kwargs...)
     plan = plan_fft(source)
-    return phase_register(plan, plan * source, plan * target; kwargs...)
+    return phase_offset(plan, plan * source, plan * target; kwargs...)
 end
-function phase_register(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_freq; upsample_factor=1) where T
+
+function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_freq; upsample_factor=1) where T
     # whole-pixel shift
     # compute cross-correlation via iFFT
     image_product = source_freq .* target_freq'
@@ -112,5 +113,24 @@ function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift)
     @. image_freq *= exp(-im * 2π * (freqs1 * shift[1] + freqs2 * shift[2]))
     return image_freq
 end
+
+function register(reference, target; kwargs...)
+    plan = plan_fft(reference)
+    target_freq = plan * target
+    shift = phase_offset(plan, plan * reference, target_freq; kwargs...)
+    shifted = fourier_shift!(target_freq, shift)
+    return real(plan \ shifted)
+end
+
+function coregister!(cube::AbstractArray; dims, kwargs...)
+    @inbounds for idx in axes(cube, dims)[begin + 1:end]
+        reference = selectdim(cube, dims, idx - 1)
+        target = selectdim(cube, dims, idx)
+        # target is a view, update inplace
+        target .= register(reference, target; kwargs...)
+    end
+    return cube
+end
+coregister(cube::AbstractArray; kwargs...) = coregister!(copy(cube); kwargs...)
 
 end
