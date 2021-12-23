@@ -1,6 +1,7 @@
 module SubpixelRegistration
 
 using AbstractFFTs
+using Compat
 using FFTW
 using Statistics
 
@@ -52,7 +53,7 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
     cross_correlation = plan \ image_product # ifft
 
     # locate maximums
-    maxima, maxidx = findmax(abs, cross_correlation)
+    maxima, maxidx = @compat findmax(abs, cross_correlation)
     midpoints = map(ax -> (first(ax) + last(ax)) / 2, axes(source_freq))
 
     shape = size(source_freq)
@@ -70,7 +71,7 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
     # matmul DFT
     sample_region_offset = @. dftshift - shifts * upsample_factor
     cross_correlation = upsampled_dft(image_product, upsample_region_size, upsample_factor, sample_region_offset)
-    maxima, maxidx = findmax(abs, cross_correlation)
+    maxima, maxidx = @compat findmax(abs, cross_correlation)
     shifts = @. shifts + (maxidx.I - dftshift - 1) / upsample_factor
 
     @debug "found final shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
