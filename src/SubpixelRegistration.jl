@@ -57,7 +57,8 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
     midpoints = map(ax -> (first(ax) + last(ax)) / 2, axes(source_freq))
 
     shape = size(source_freq)
-    shifts = @. ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - 1.0
+    offset = firstindex(cross_correlation)
+    shifts = @. float(ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - offset)
 
     @debug "found initial shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
 
@@ -72,7 +73,7 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
     sample_region_offset = @. dftshift - shifts * upsample_factor
     cross_correlation = upsampled_dft(image_product, upsample_region_size, upsample_factor, sample_region_offset)
     maxima, maxidx = @compat findmax(abs, cross_correlation)
-    shifts = @. shifts + (maxidx.I - dftshift - 1) / upsample_factor
+    shifts = @. shifts + (maxidx.I - dftshift - offset) / upsample_factor
 
     @debug "found final shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
 
