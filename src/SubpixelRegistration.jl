@@ -4,18 +4,30 @@ using AbstractFFTs
 using FFTW
 using Statistics
 
+"""
+    phase_register(source, target; upsample_factor=1)
+
+Return the shift between `source` and `target` by measuring the maximum in the cross-correlation between the images. This algorithm can achieve `1/upsample_factor` precision by locally upsampling the cross-correlation via a matrix-multiplication DFT.
+
+# Examples
+
+# References
+
+1. 
+"""
 function phase_register(source, target; upsample_factor=1)
 
     # 1. FFT input data
-    source_freq = fft(source)
-    target_freq = fft(target)
+    FT = plan_fft(source)
+    source_freq = FT * source
+    target_freq = FT * target
 
     # whole-pixel shift
     # compute cross-correlation via iFFT
     image_product = source_freq .* target_freq'
     # phase normalization
     @. image_product /= max(abs(image_product), 100 * eps(eltype(source)))
-    cross_correlation = ifft(image_product)
+    cross_correlation = FT \ image_product # ifft
 
     # locate maximums
     maxima, maxidx = findmax(abs, cross_correlation)
@@ -44,20 +56,30 @@ function phase_register(source, target; upsample_factor=1)
     return shifts
 end
 
-function upsampled_dft(data::AbstractArray{T,N}, upsample_region_size, upsample_factor, axis_offsets) where {T<:Complex,N}
+"""
+    SubpixelRegistration.upsampled_dft(data, region_size, upsample_factor, offsets)
+
+Calculate the cross-correlation in a region of size `region_size` via an upsampled DFT. The DFT uses matrix-multiplication to super-sample the input by `upsample_factor`. The frequencies will be shifted and centered around `offsets`.
+"""
+function upsampled_dft(data::AbstractMatrix{T}, region_size, upsample_factor, offsets) where {T<:Complex}
     im2pi = T(0, 2π)
-    shiftrange = 1:upsample_region_size
+    shiftrange = 1:region_size
     freqs = fftfreq(size(data, 2), inv(upsample_factor))
-    kernel = @. exp(-im2pi * (shiftrange - axis_offsets[2] - 1) * freqs')
+    kernel = @. exp(-im2pi * (shiftrange - offsets[2] - 1) * freqs')
 
     _data = kernel * data'
 
     freqs = fftfreq(size(data, 1), inv(upsample_factor))
-    kernel = @. exp(-im2pi * (shiftrange' - axis_offsets[1] - 1) * freqs)
-    _data = kernel' * _data'
+    kernel = @. exp(im2pi * (shiftrange - offsets[1] - 1) * freqs')
+    _data = kernel * _data'
     return _data
 end
 
+"""
+    SubpixelRegistration.calculate_stats(crosscor_maxima, source_freq, target_freq)
+
+Calculate the normalized root-mean-square error (NRMSE) and total phase difference between the two complex arrays, `source_freq` and `target_freq`, with maximum cross-correlation value `crosscor_maxima`
+"""
 function calculate_stats(crosscor_maxima, source_freq, target_freq)
     source_amp = mean(abs2, source_freq)
     target_amp = mean(abs2, target_freq)
