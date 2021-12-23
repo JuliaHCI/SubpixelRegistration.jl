@@ -17,19 +17,17 @@ Return the shift between `source` and `target` by measuring the maximum in the c
 
 1. 
 """
-function phase_register(source, target; upsample_factor=1)
-
-    # 1. FFT input data
-    FT = plan_fft(source)
-    source_freq = FT * source
-    target_freq = FT * target
-
+function phase_register(source, target; kwargs...)
+    plan = plan_fft(source)
+    return phase_register(plan, plan * source, plan * target; kwargs...)
+end
+function phase_register(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_freq; upsample_factor=1) where T
     # whole-pixel shift
     # compute cross-correlation via iFFT
     image_product = source_freq .* target_freq'
     # phase normalization
-    @. image_product /= max(abs(image_product), 100 * eps(eltype(source)))
-    cross_correlation = FT \ image_product # ifft
+    @. image_product /= max(abs(image_product), 100 * eps(T))
+    cross_correlation = plan \ image_product # ifft
 
     # locate maximums
     maxima, maxidx = findmax(abs, cross_correlation)
