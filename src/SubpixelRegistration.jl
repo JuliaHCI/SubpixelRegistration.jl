@@ -23,13 +23,22 @@ julia> shift = (-1.6, 2.8)
 julia> target = fourier_shift(image, shift);
 
 julia> phase_offset(image, target)
-(2.0, -3.0)
+(shift = (2.0, -3.0), error = 0.9999999999997532, phasediff = 0.0)
 
 julia> phase_offset(image, target; upsample_factor=5)
-(1.8, -2.8)
+(shift = (1.8, -2.8), error = 0.9999999971025185, phasediff = 0.0)
 
 julia> @. isapprox(ans, -1 * shift, atol=1/5)
-(true, true)
+ERROR: ArgumentError: broadcasting over dictionaries and `NamedTuple`s is reserved
+Stacktrace:
+ [1] broadcastable(#unused#::NamedTuple{(:shift, :error, :phasediff), Tuple{Tuple{Float64, Float64}, Float64, Float64}})
+   @ Base.Broadcast ./broadcast.jl:705
+ [2] broadcasted(::Function, ::NamedTuple{(:shift, :error, :phasediff), Tuple{Tuple{Float64, Float64}, Float64, Float64}}, ::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple}, Nothing, typeof(*), Tuple{Int64, Tuple{Float64, Float64}}})
+   @ Base.Broadcast ./broadcast.jl:1300
+ [3] broadcasted_kwsyntax(::Function, ::NamedTuple{(:shift, :error, :phasediff), Tuple{Tuple{Float64, Float64}, Float64, Float64}}, ::Vararg{Any}; kwargs::Base.Pairs{Symbol, Float64, Tuple{Symbol}, NamedTuple{(:atol,), Tuple{Float64}}})
+   @ Base.Broadcast ./broadcast.jl:1283
+ [4] top-level scope
+   @ none:1
 ```
 
 [^1]: Manuel Guizar-Sicairos, Samuel T. Thurman, and James R. Fienup, ["Efficient subpixel image registration algorithms,"](http://www.opticsinfobase.org/ol/fulltext.cfm?uri=ol-33-2-156&id=148843) Opt. Lett. 33, 156-158 (2008)
@@ -58,26 +67,25 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
 
     shape = size(source_freq)
     offset = firstindex(cross_correlation)
-    shifts = @. float(ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - offset)
+    shift = @. float(ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - offset)
 
-    @debug "found initial shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
+    @debug "found initial shift $shift" calculate_stats(maxima, source_freq, target_freq)...
 
-    isone(upsample_factor) && return shifts
+    isone(upsample_factor) && return (;shift, calculate_stats(maxima, source_freq, target_freq)...)
 
     # upsample with matrix-multiply DFT
-    shifts = @. round(shifts * upsample_factor) / upsample_factor
+    shift = @. round(shift * upsample_factor) / upsample_factor
     upsample_region_size = ceil(upsample_factor * 1.5)
     # center of output array at dftshift + 1
     dftshift = div(upsample_region_size, 2)
     # matmul DFT
-    sample_region_offset = @. dftshift - shifts * upsample_factor
+    sample_region_offset = @. dftshift - shift * upsample_factor
     cross_correlation = upsampled_dft(image_product, upsample_region_size, upsample_factor, sample_region_offset)
     maxima, maxidx = @compat findmax(abs, cross_correlation)
-    shifts = @. shifts + (maxidx.I - dftshift - offset) / upsample_factor
+    shift = @. shift + (maxidx.I - dftshift - offset) / upsample_factor
 
-    @debug "found final shift $shifts" calculate_stats(maxima, source_freq, target_freq)...
-
-    return shifts
+    stats = calculate_stats(maxima, source_freq, target_freq)
+    return (;shift, stats...)
 end
 
 """
@@ -160,8 +168,8 @@ julia> target_shift = register(image, target; upsample_factor=5);
 function register(source, target; kwargs...)
     plan = plan_fft(source)
     target_freq = plan * target
-    shift = phase_offset(plan, plan * source, target_freq; kwargs...)
-    shifted = fourier_shift!(target_freq, shift)
+    result = phase_offset(plan, plan * source, target_freq; kwargs...)
+    shifted = fourier_shift!(target_freq, result.shift, result.phasediff)
     return real(plan \ shifted)
 end
 
@@ -191,8 +199,8 @@ function coregister!(cube::AbstractArray; dims, refidx=firstindex(cube, dims), k
         target = selectdim(cube, dims, idx)
         target_freq = plan * target
         # measure offset and fourier shift
-        shift = phase_offset(plan, source_freq, target_freq; kwargs...)
-        fourier_shift!(target_freq, shift)
+        result = phase_offset(plan, source_freq, target_freq; kwargs...)
+        fourier_shift!(target_freq, result.shift, result.phasediff)
         # target is a view, update inplace
         target .= real.(plan \ target_freq)
     end

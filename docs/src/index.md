@@ -46,11 +46,12 @@ Environment:
   JULIA_NUM_THREADS = 1
 ```
 
+**Benchmark Results**
+
 ```@example
 using CSV, DataFrames, StatsPlots, SubpixelRegistration # hide
 benchdir = joinpath(dirname(pathof(SubpixelRegistration)), "..", "bench") # hide
 results = DataFrame(CSV.File(joinpath(benchdir, "benchmark_results.csv"))) # hide
-results = filter(:upsample_factor => ∈([1, 10, 100]), results)
 groups = groupby(results, :upsample_factor) # hide
 plot(xlabel="image size", ylabel="time (s)") # hide
 shapes = [:o :dtriangle :diamond] # hide

@@ -23,7 +23,7 @@ rows = []
     img_shifted = fourier_shift(img, shift)
     @progress "upsample factors" for ups in UPSAMPLE_FACTORS
         bench_jl = @benchmark phase_offset($img, $img_shifted, upsample_factor=$ups)
-        bench_py = @benchmark skr.phase_cross_correlation($img, $img_shifted, upsample_factor=$ups, return_error=false)
+        bench_py = @benchmark skr.phase_cross_correlation($img, $img_shifted, upsample_factor=$ups, return_error=true)
         bundle = (;
             size=N, upsample_factor=ups, 
             time_jl=median(bench_jl).time/1e9, time_py=median(bench_py).time/1e9
