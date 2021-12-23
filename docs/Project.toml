@@ -1,2 +1,3 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+SubpixelRegistration = "97a7e826-69e2-510e-8af8-254736c4b599"
