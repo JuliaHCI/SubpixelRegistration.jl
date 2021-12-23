@@ -1,34 +1,26 @@
 using SubpixelRegistration
-using FFTW
 using Test
+using StableRNGs
 
-## Testing the registration on a small 4d array
-@testset "Testing the registration on a small 4d array" begin
-    test4d = zeros(40,40,20,2)
+rng = StableRNG(121)
 
-    test4d[10:20,10:20,2:10,1] .= 1
-    test4d[5:15,15:25,5:13,2] .= 1
-
-
-    ## No subpixel resolution
-    dftResults = stackDftReg(test4d,ufac=1)
-
-    @test length(dftResults) == size(test4d)[4]
-    @test dftResults[2]["shift"] == [5,-5,-3]
-
-    ## Factor 2
-    dftResults = stackDftReg(test4d,ufac=2)
-
-    @test length(dftResults) == size(test4d)[4]
-    @test dftResults[2]["shift"] == [5,-5,-3]
-
-    # More refined (needs dftups)
-    dftResults = stackDftReg(test4d,ufac=3)
-
-    @test length(dftResults) == size(test4d)[4]
-    @test dftResults[2]["shift"] == [5,-5,-3]
-
-    ## Testing the translation
-    back4d = alignFromDict(test4d,dftResults)
-    @test all(round.(back4d[:,:,:,2]-back4d[:,:,:,1]).<eps())
+@testset "SubpixelRegistration.jl" begin
+    reference = reshape(1.0:10000.0, 100, 100)
+    @testset "pixel shift" for _ in 1:100
+        shift = (rand(rng, -25:25), rand(rng, -25:25))
+        shifted = SubpixelRegistration.fourier_shift(reference, shift)
+        _shift = phase_offset(reference, shifted; upsample_factor=1)
+        @test all(_shift .≈ -1 .* shift)
+    end
+    @testset "subpixel shift" for _ in 1:100
+        shift = (
+            10 * randn(rng),
+            10 * randn(rng)
+        )
+        shifted = SubpixelRegistration.fourier_shift(reference, shift)
+        
+        f = 10
+        _shift = phase_offset(reference, shifted; upsample_factor=f)
+        @test all(isapprox.(_shift, -1 .* shift, atol=inv(f)))
+    end
 end

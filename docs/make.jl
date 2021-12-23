@@ -1,8 +1,25 @@
-using Documenter, SubpixelRegistration
+using SubpixelRegistration
+using Documenter
 
-makedocs(modules= subpixelRegistration)
-deploydocs(
-    julia = "nightly",
-    deps   = Deps.pip("mkdocs", "python-markdown-math"),
-    repo = "github.com/romainFr/SubpixelRegistration.jl.git"
+DocMeta.setdocmeta!(SubpixelRegistration, :DocTestSetup, :(using SubpixelRegistration); recursive=true)
+
+makedocs(;
+    modules=[SubpixelRegistration],
+    authors="Miles Lucas <mdlucas@hawaii.edu> and contributors",
+    repo="https://github.com/JuliaHCI/SubpixelRegistration.jl/blob/{commit}{path}#{line}",
+    sitename="SubpixelRegistration.jl",
+    format=Documenter.HTML(;
+        prettyurls=get(ENV, "CI", "false") == "true",
+        canonical="https://JuliaHCI.github.io/SubpixelRegistration.jl",
+        assets=String[],
+    ),
+    pages=[
+        "Home" => "index.md",
+        "API/Reference" => "api.md"
+    ],
+)
+
+deploydocs(;
+    repo="github.com/JuliaHCI/SubpixelRegistration.jl",
+    devbranch="main",
 )

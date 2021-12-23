@@ -1,25 +1,27 @@
-# subpixelRegistration documentation
-
-## User functions
-
-```@docs
-stackDftReg{T,N}(imgser::AbstractArray{T,N})
+```@meta
+CurrentModule = SubpixelRegistration
 ```
 
-```@docs
-alignFromDict{T,N}(img2reg::AbstractArray{T,N},dftRegRes::Array{Any,1})
+# SubpixelRegistration.jl
+
+[![Code](https://img.shields.io/badge/Code-GitHub-black.svg)](https://github.com/JuliaHCI/SubpixelRegistration.jl)
+[![Build Status](https://github.com/JuliaHCI/SubpixelRegistration.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaHCI/SubpixelRegistration.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![PkgEval](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/S/SubpixelRegistration.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html)
+[![Coverage](https://codecov.io/gh/JuliaHCI/SubpixelRegistration.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/JuliaHCI/SubpixelRegistration.jl)
+[![License](https://img.shields.io/github/license/JuliaHCI/SubpixelRegistration.jl?color=yellow)](https://github.com/JuliaHCI/SubpixelRegistration.jl/blob/main/LICENSE)
+
+Image registration with sub-pixel precision using an upsampled discrete Fourier transform cross-correlation.
+
+## Installation
+
+```julia
+julia>] add SubpixelRegistration
 ```
 
-## Non exported functions
+## Usage
 
-```@docs
-subpixelRegistration.subPixShift(imgft::AbstractArray{Complex{Float64}},shift::Array{Float64,1})
-```
+## License
 
-```@docs
-subpixelRegistration.dftups{T,N}(inp::AbstractArray{T,N},no,usfac::Int=1,offset=zeros(N))
-```
+## Contributing and Support
 
-```@docs
-subpixelRegistration.dftReg{N}(imgRef::AbstractArray{Complex{Float64},N},imgF::AbstractArray{Complex{Float64},N},usfac)
-```
+If you would like to contribute, feel free to open a [pull request](https://github.com/JuliaHCI/SubpixelRegistration.jl/pulls). If you want to discuss something before contributing, head over to [discussions](https://github.com/JuliaHCI/SubpixelRegistration.jl/discussions) and join or open a new topic. If you're having problems with something, please open an [issue](https://github.com/JuliaHCI/SubpixelRegistration.jl/issues).
