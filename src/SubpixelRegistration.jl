@@ -85,9 +85,34 @@ Calculate the normalized root-mean-square error (NRMSE) and total phase differen
 function calculate_stats(crosscor_maxima, source_freq, target_freq)
     source_amp = mean(abs2, source_freq)
     target_amp = mean(abs2, target_freq)
-    error = abs(1 - crosscor_maxima * crosscor_maxima' / (source_amp * target_amp))
+    error = 1 - abs2(crosscor_maxima) / (source_amp * target_amp)
     phasediff = atan(imag(crosscor_maxima), real(crosscor_maxima))
     return (; error, phasediff)
+end
+
+"""
+    fourier_shift(image, shift)
+
+Shift the given `image` by `shift` along each axis, using the Fourier phase information.
+"""
+function fourier_shift(image, shift)
+    FT = plan_fft(image)
+    shifted = fourier_shift!(FT * image, shift)
+    return real(FT \ shifted)
+end
+
+"""
+    fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift)
+
+Shift the given image, which is already in frequency-space, by `shift` along each axis. Modifies `image_freq` inplace.
+"""
+function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift)
+    shape = size(image_freq)
+    
+    freqs1 = fftfreq(shape[1])'
+    freqs2 = fftfreq(shape[2])
+    @. image_freq *= exp(-im * 2π * (freqs1 * shift[1] + freqs2 * shift[2]))
+    return image_freq
 end
 
 end
