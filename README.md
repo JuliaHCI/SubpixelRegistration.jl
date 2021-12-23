@@ -8,7 +8,11 @@
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaHCI.github.io/SubpixelRegistration.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaHCI.github.io/SubpixelRegistration.jl/dev)
 
-Image registration with subpixel precision using an upsampled discrete Fourier transform cross-correlation. This uses an efficient matrix-multiplication algorithm for upsampling the cross-correlation following Guizar-Sicairos, Thurman, and Fienup,  (2008) ["Efficient subpixel image registration algorithms")](http://www.opticsinfobase.org/ol/fulltext.cfm?uri=ol-33-2-156&id=148843) . 
+Image registration with subpixel precision using an upsampled discrete Fourier transform cross-correlation. This uses an efficient matrix-multiplication algorithm for upsampling the cross-correlation following Guizar-Sicairos, Thurman, and Fienup (2008).[^1]
+
+## Referencnes
+
+> [^1]: Guizar-Sicairos, Thurman, and Fienup, 2008, ["Efficient subpixel image registration algorithms"](http://www.opticsinfobase.org/ol/fulltext.cfm?uri=ol-33-2-156&id=148843)
 
 ## Installation
 
@@ -18,7 +22,9 @@ julia>] add SubpixelRegistration
 
 ## Usage
 
-## License
+```julia
+julia> using SubpixelRegistration
+```
 
 ## Contributing and Support
 
