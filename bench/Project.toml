@@ -2,5 +2,8 @@
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
+PSFModels = "9ba017d1-7760-46cd-84a3-1e79e9ae9ddc"
+ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 SubpixelRegistration = "97a7e826-69e2-510e-8af8-254736c4b599"

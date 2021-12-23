@@ -1,2 +1,2 @@
 [deps]
-scikit-image = ""
+scikit-image = "0.19"

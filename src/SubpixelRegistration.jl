@@ -116,23 +116,23 @@ end
 
 Shift the given `image` by `shift` along each axis, using the Fourier phase information.
 """
-function fourier_shift(image, shift)
+function fourier_shift(image, shift, args...)
     FT = plan_fft(image)
-    shifted = fourier_shift!(FT * image, shift)
+    shifted = fourier_shift!(FT * image, shift, args...)
     return real(FT \ shifted)
 end
 
 """
-    fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift)
+    fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift, phasediff=0)
 
 Shift the given image, which is already in frequency-space, by `shift` along each axis. Modifies `image_freq` inplace.
 """
-function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift)
+function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift, phasediff=0)
     shape = size(image_freq)
     
     freqs1 = fftfreq(shape[1])'
     freqs2 = fftfreq(shape[2])
-    @. image_freq *= cis(-2π * (freqs1 * shift[1] + freqs2 * shift[2]))
+    @. image_freq *= cis(-2π * (freqs1 * shift[1] + freqs2 * shift[2]) + phasediff)
     return image_freq
 end
 
