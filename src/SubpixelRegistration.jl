@@ -9,7 +9,7 @@ export phase_offset, register, coregister, coregister!, fourier_shift
 """
     phase_offset(source, target; upsample_factor=1)
 
-Return the shift between `source` and `target` by measuring the maximum in the cross-correlation between the images. This algorithm can achieve `1/upsample_factor` precision by locally upsampling the cross-correlation via a matrix-multiplication DFT.[^1]
+Return the shift between `source` and `target` along each axis by measuring the maximum in the cross-correlation between the images. This algorithm can achieve `1/upsample_factor` precision by locally upsampling the cross-correlation via a matrix-multiplication DFT.[^1]
 
 # Examples
 
@@ -166,7 +166,7 @@ end
 """
     coregister(cube; dims, refidx=firstindex(cube, dims), upsample_factor=1)
 
-Coregister a cube of data along `dims`, using the `refidx` slice as the reference frame. Other keyword arguments will be passed to [`phase_offset`](@ref)
+Coregister a cube of data along `dims`, using the `refidx` slice as the source frame. Other keyword arguments will be passed to [`phase_offset`](@ref)
 
 # See also
 [`coregister!`](@ref)
@@ -182,15 +182,16 @@ Coregister slices in `cube`, modifyingn it inplace.
 [`coregister`](@ref)
 """
 function coregister!(cube::AbstractArray; dims, refidx=firstindex(cube, dims), kwargs...)
-    reference = selectdim(cube, dims, refidx)
-    plan = plan_fft(reference)
-    reference_freq = plan * reference
+    source = selectdim(cube, dims, refidx)
+    plan = plan_fft(source)
+    source_freq = plan * source
     @inbounds for idx in axes(cube, dims)[begin + 1:end]
         target = selectdim(cube, dims, idx)
         target_freq = plan * target
-        shift = phase_offset(plan, reference_freq, target_freq; kwargs...)
-        # target is a view, update inplace
+        # measure offset and fourier shift
+        shift = phase_offset(plan, source_freq, target_freq; kwargs...)
         fourier_shift!(target_freq, shift)
+        # target is a view, update inplace
         target .= real.(plan \ target_freq)
     end
     return cube
