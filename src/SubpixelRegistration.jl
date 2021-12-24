@@ -53,11 +53,10 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
     cross_correlation = plan \ image_product # ifft
 
     # locate maximums
-    shape = size(source_freq)
-    midpoints = map(ax -> (first(ax) + last(ax)) / 2, shape)
-    idxoffset = map(first, axes(cross_correlation))
-
     maxima, maxidx = @compat findmax(abs, cross_correlation)
+    shape = size(source_freq)
+    midpoints = map(ax -> (first(ax) + last(ax)) / 2, axes(source_freq))
+    idxoffset = map(first, axes(cross_correlation))
     shift = @. float(ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - idxoffset)
 
     isone(upsample_factor) && return (;shift, calculate_stats(maxima, source_freq, target_freq)...)
