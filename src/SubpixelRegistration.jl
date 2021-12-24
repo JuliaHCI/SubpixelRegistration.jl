@@ -43,7 +43,7 @@ Stacktrace:
 
 [^1]: Manuel Guizar-Sicairos, Samuel T. Thurman, and James R. Fienup, ["Efficient subpixel image registration algorithms,"](http://www.opticsinfobase.org/ol/fulltext.cfm?uri=ol-33-2-156&id=148843) Opt. Lett. 33, 156-158 (2008)
 """
-function phase_offset(source, target; kwargs...)
+function phase_offset(source::AbstractArray, target::AbstractArray; kwargs...)
     plan = plan_fft(source)
     return phase_offset(plan, plan * source, plan * target; kwargs...)
 end
