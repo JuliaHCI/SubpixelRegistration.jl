@@ -1,7 +1,7 @@
 name = "SubpixelRegistration"
 uuid = "97a7e826-69e2-510e-8af8-254736c4b599"
 author = ["Romain Franconville <romain.franconville@protonmail.com>, Miles Lucas <mdlucas@hawaii.edu>, and cotributors"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
