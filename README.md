@@ -47,7 +47,7 @@ the `register` and `coregister` methods directly manipulate images (or stacks of
 ```julia
 julia> register(source, shifted; upsample_factor=100);
 
-julia> coregister(cube; reference=1, upsample_factor=10);
+julia> coregister(cube; dims=3, reference=1, upsample_factor=10);
 ```
 
 ## Contributing and Support
