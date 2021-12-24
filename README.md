@@ -20,8 +20,34 @@ julia>] add SubpixelRegistration
 
 ## Usage
 
+First, import the package
+
 ```julia
 julia> using SubpixelRegistration
+```
+
+now, let's load two images we wish to register
+
+```julia
+julia> source, target = # ...
+```
+
+we can use `phase_offset` directly to perform the DFT-upsampling cross-correlation analysis
+
+```julia
+julia> phase_offset(source, shifted; upsample_factor=1)
+(shift = (-22.0, 13.0), error = 0.9999999999214572, phasediff = 0.0)
+
+julia> phase_offset(source, target; upsample_factor=4)
+(shift = (-22.5, 13.25), error = -11.584699520819848, phasediff = 0.0)
+```
+
+the `register` and `coregister` methods directly manipulate images (or stacks of images) using this phase offset method
+
+```julia
+julia> register(source, shifted; upsample_factor=100);
+
+julia> coregister(cube; reference=1, upsample_factor=10);
 ```
 
 ## Contributing and Support

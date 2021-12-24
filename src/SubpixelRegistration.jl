@@ -47,11 +47,10 @@ Returns the phase shift between the two images which have already been Fourier t
 function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_freq; upsample_factor=1) where T
     # whole-pixel shift
     # compute cross-correlation via iFFT
-    image_product = source_freq .* target_freq'
+    image_product = transpose(source_freq) .* target_freq'
     # phase normalization
     @. image_product /= max(abs(image_product), 100 * eps(T))
     cross_correlation = plan \ image_product # ifft
-
     # locate maximums
     maxima, maxidx = @compat findmax(abs, cross_correlation)
     shape = size(source_freq)
@@ -83,14 +82,15 @@ Calculate the cross-correlation in a region of size `region_size` via an upsampl
 """
 function upsampled_dft(data::AbstractMatrix{T}, region_size, upsample_factor, offsets) where {T<:Complex}
     shiftrange = 1:region_size
+    idxoffset = map(first, axes(data))
     sample_rate = inv(upsample_factor)
     freqs = fftfreq(size(data, 2), sample_rate)
-    kernel = @. cis(-2π * (shiftrange - offsets[2] - 1) * freqs')
+    kernel = @. cis(-2π * (shiftrange - offsets[2] - idxoffset[2]) * freqs')
 
     _data = kernel * data'
 
     freqs = fftfreq(size(data, 1), sample_rate)
-    kernel = @. cis(2π * (shiftrange - offsets[1] - 1) * freqs')
+    kernel = @. cis(2π * (shiftrange - offsets[1] - idxoffset[1]) * freqs')
     _data = kernel * _data'
     return _data
 end

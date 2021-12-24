@@ -1,6 +1,10 @@
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+ColorTypes = "3da002f7-5984-5a60-b8a6-cbb66c0b333f"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
+ImageShow = "4e3cecfd-b093-5904-9786-8bbb286a6a31"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 SubpixelRegistration = "97a7e826-69e2-510e-8af8-254736c4b599"
+TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"

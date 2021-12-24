@@ -22,8 +22,34 @@ julia>] add SubpixelRegistration
 
 ## Usage
 
-```julia
-julia> using SubpixelRegistration
+```@example test
+using ColorTypes
+using ImageIO
+using ImageShow
+using SubpixelRegistration
+using TestImages
+
+image = testimage("cameraman")
+```
+
+```@example test
+shift = (22.4, -13.32)
+source = Float64.(image)
+shifted = fourier_shift(source, shift)
+Gray.(shifted)
+```
+
+```@example test
+phase_offset(source, shifted; upsample_factor=1)
+```
+
+```@example test
+phase_offset(source, shifted; upsample_factor=100)
+```
+
+```@example test
+registered = register(source, shifted; upsample_factor=100)
+Gray.(registered)
 ```
 
 ## Benchmarks
