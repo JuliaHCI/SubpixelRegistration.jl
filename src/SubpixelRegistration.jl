@@ -28,17 +28,8 @@ julia> phase_offset(image, target)
 julia> phase_offset(image, target; upsample_factor=5)
 (shift = (1.8, -2.8), error = 0.9999999971025185, phasediff = 0.0)
 
-julia> @. isapprox(ans, -1 * shift, atol=1/5)
-ERROR: ArgumentError: broadcasting over dictionaries and `NamedTuple`s is reserved
-Stacktrace:
- [1] broadcastable(#unused#::NamedTuple{(:shift, :error, :phasediff), Tuple{Tuple{Float64, Float64}, Float64, Float64}})
-   @ Base.Broadcast ./broadcast.jl:705
- [2] broadcasted(::Function, ::NamedTuple{(:shift, :error, :phasediff), Tuple{Tuple{Float64, Float64}, Float64, Float64}}, ::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple}, Nothing, typeof(*), Tuple{Int64, Tuple{Float64, Float64}}})
-   @ Base.Broadcast ./broadcast.jl:1300
- [3] broadcasted_kwsyntax(::Function, ::NamedTuple{(:shift, :error, :phasediff), Tuple{Tuple{Float64, Float64}, Float64, Float64}}, ::Vararg{Any}; kwargs::Base.Pairs{Symbol, Float64, Tuple{Symbol}, NamedTuple{(:atol,), Tuple{Float64}}})
-   @ Base.Broadcast ./broadcast.jl:1283
- [4] top-level scope
-   @ none:1
+julia> @. isapprox(ans.shift, -1 * shift, atol=1/5)
+(true, true)
 ```
 
 [^1]: Manuel Guizar-Sicairos, Samuel T. Thurman, and James R. Fienup, ["Efficient subpixel image registration algorithms,"](http://www.opticsinfobase.org/ol/fulltext.cfm?uri=ol-33-2-156&id=148843) Opt. Lett. 33, 156-158 (2008)
@@ -62,14 +53,12 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
     cross_correlation = plan \ image_product # ifft
 
     # locate maximums
-    maxima, maxidx = @compat findmax(abs, cross_correlation)
-    midpoints = map(ax -> (first(ax) + last(ax)) / 2, axes(source_freq))
-
     shape = size(source_freq)
-    offset = firstindex(cross_correlation)
-    shift = @. float(ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - offset)
+    midpoints = map(ax -> (first(ax) + last(ax)) / 2, shape)
+    idxoffset = map(first, axes(cross_correlation))
 
-    @debug "found initial shift $shift" calculate_stats(maxima, source_freq, target_freq)...
+    maxima, maxidx = @compat findmax(abs, cross_correlation)
+    shift = @. float(ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - idxoffset)
 
     isone(upsample_factor) && return (;shift, calculate_stats(maxima, source_freq, target_freq)...)
 
@@ -82,7 +71,7 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
     sample_region_offset = @. dftshift - shift * upsample_factor
     cross_correlation = upsampled_dft(image_product, upsample_region_size, upsample_factor, sample_region_offset)
     maxima, maxidx = @compat findmax(abs, cross_correlation)
-    shift = @. shift + (maxidx.I - dftshift - offset) / upsample_factor
+    shift = @. shift + (maxidx.I - dftshift - idxoffset) / upsample_factor
 
     stats = calculate_stats(maxima, source_freq, target_freq)
     return (;shift, stats...)
@@ -95,12 +84,13 @@ Calculate the cross-correlation in a region of size `region_size` via an upsampl
 """
 function upsampled_dft(data::AbstractMatrix{T}, region_size, upsample_factor, offsets) where {T<:Complex}
     shiftrange = 1:region_size
-    freqs = fftfreq(size(data, 2), inv(upsample_factor))
+    sample_rate = inv(upsample_factor)
+    freqs = fftfreq(size(data, 2), sample_rate)
     kernel = @. cis(-2π * (shiftrange - offsets[2] - 1) * freqs')
 
     _data = kernel * data'
 
-    freqs = fftfreq(size(data, 1), inv(upsample_factor))
+    freqs = fftfreq(size(data, 1), sample_rate)
     kernel = @. cis(2π * (shiftrange - offsets[1] - 1) * freqs')
     _data = kernel * _data'
     return _data
