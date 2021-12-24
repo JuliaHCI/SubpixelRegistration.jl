@@ -35,7 +35,7 @@ julia> source, target = # ...
 we can use `phase_offset` directly to perform the DFT-upsampling cross-correlation analysis
 
 ```julia
-julia> phase_offset(source, shifted; upsample_factor=1)
+julia> phase_offset(source, target; upsample_factor=1)
 (shift = (-22.0, 13.0), error = 0.9999999999214572, phasediff = 0.0)
 
 julia> phase_offset(source, target; upsample_factor=4)
@@ -45,9 +45,9 @@ julia> phase_offset(source, target; upsample_factor=4)
 the `register` and `coregister` methods directly manipulate images (or stacks of images) using this phase offset method
 
 ```julia
-julia> register(source, shifted; upsample_factor=100);
+julia> register(source, target; upsample_factor=100);
 
-julia> coregister(cube; dims=3, reference=1, upsample_factor=10);
+julia> coregister(cube; dims=3, reference=1, upsample_factor=100);
 ```
 
 ## Contributing and Support
