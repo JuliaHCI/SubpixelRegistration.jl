@@ -50,7 +50,14 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
     image_product = transpose(source_freq) .* target_freq'
     # phase normalization
     @. image_product /= max(abs(image_product), 100 * eps(T))
-    cross_correlation = plan \ image_product # ifft
+    # ifft to calculate cross correlation
+    if isone(upsample_factor)
+        # no upsampling means we can modify this array
+        cross_correlation = ifft!(image_product)
+    else
+        cross_correlation = plan \ image_product
+    end
+
     # locate maximums
     maxima, maxidx = @compat findmax(abs, cross_correlation)
     shape = size(source_freq)
@@ -126,7 +133,7 @@ Shift the given image, which is already in frequency-space, by `shift` along eac
 """
 function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift, phasediff=0)
     shape = size(image_freq)
-    
+
     freqs1 = fftfreq(shape[1])'
     freqs2 = fftfreq(shape[2])
     @. image_freq *= cis(-2π * (freqs1 * shift[1] + freqs2 * shift[2]) + phasediff)
