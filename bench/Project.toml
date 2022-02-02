@@ -7,3 +7,6 @@ ProgressLogging = "33c8b6b6-d38a-422a-b730-caa89a2f386c"
 PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 SubpixelRegistration = "97a7e826-69e2-510e-8af8-254736c4b599"
+
+[compat]
+PSFModels = "0.4,0.5"

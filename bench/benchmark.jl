@@ -1,7 +1,7 @@
 using BenchmarkTools
 using CSV
 using ProgressLogging
-using PSFModels: Gaussian
+using PSFModels: gaussian
 using PythonCall
 using Random
 using Statistics
@@ -18,7 +18,7 @@ UPSAMPLE_FACTORS = (1, 100, 1000)
 rows = []
 @progress "sizes" for N in SIZES
     center = (N + 1) / 2
-    img = Gaussian(x=center, y=center, fwhm=10)[1:N, 1:N]
+    img = gaussian.(CartesianIndices((1:N, 1:N)); x=center, y=center, fwhm=10)
     shift = 10 .* randn(rng, 2)
     img_shifted = fourier_shift(img, shift)
     @progress "upsample factors" for ups in UPSAMPLE_FACTORS
