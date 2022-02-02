@@ -60,14 +60,14 @@ This code has been benchmarked against the [scikit-image](https://github.com/sci
 
 ```julia
 julia> versioninfo()
-Julia Version 1.7.0-rc3
-Commit 3348de4ea6* (2021-11-15 08:22 UTC)
+Julia Version 1.8.0-DEV.1437
+Commit a0093d2ffb (2022-02-01 00:11 UTC)
 Platform Info:
-  OS: macOS (x86_64-apple-darwin20.5.0)
-  CPU: Intel(R) Core(TM) i5-8259U CPU @ 2.30GHz
+  OS: macOS (arm64-apple-darwin21.2.0)
+  CPU: Apple M1 Max
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-12.0.1 (ORCJIT, skylake)
+  LLVM: libLLVM-13.0.0 (ORCJIT, cyclone)
 Environment:
   JULIA_NUM_THREADS = 1
 ```
