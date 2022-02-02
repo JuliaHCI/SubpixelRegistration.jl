@@ -47,7 +47,7 @@ Returns the phase shift between the two images which have already been Fourier t
 function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_freq; upsample_factor=1) where T
     # whole-pixel shift
     # compute cross-correlation via iFFT
-    image_product = transpose(source_freq) .* target_freq'
+    image_product = source_freq .* conj(target_freq)
     # phase normalization
     @. image_product /= max(abs(image_product), 100 * eps(T))
     # ifft to calculate cross correlation
@@ -134,8 +134,8 @@ Shift the given image, which is already in frequency-space, by `shift` along eac
 function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift, phasediff=0)
     shape = size(image_freq)
 
-    freqs1 = fftfreq(shape[1])'
-    freqs2 = fftfreq(shape[2])
+    freqs1 = fftfreq(shape[1])
+    freqs2 = fftfreq(shape[2])'
     @. image_freq *= cis(-2π * (freqs1 * shift[1] + freqs2 * shift[2]) + phasediff)
     return image_freq
 end
