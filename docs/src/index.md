@@ -32,6 +32,10 @@ using TestImages
 image = testimage("cameraman")
 ```
 
+!!! warning "Pixel Convention"
+
+    The pixel convention adopted here is that the bottom-left pixel center is (1, 1). The column-major memory layout of julia puts the x axis as the rows of a matrix and the y axis as the columns. In other words, the shifts are described by `(dx, dy)`. This is the same pixel convention as FITS, WCS, DS9, IRAF, and SourceExtractor.
+
 ```@example test
 shift = (22.4, -13.32)
 source = Float64.(image)
