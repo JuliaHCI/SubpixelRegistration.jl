@@ -23,10 +23,10 @@ julia> shift = (-1.6, 2.8)
 julia> target = fourier_shift(image, shift);
 
 julia> phase_offset(image, target)
-(shift = (2.0, -3.0), error = 0.9999999999997532, phasediff = 0.0)
+(shift = (2.0, -3.0), error = 0.9999999999997542, phasediff = 0.0)
 
 julia> phase_offset(image, target; upsample_factor=5)
-(shift = (1.8, -2.8), error = 0.9999999971025185, phasediff = 0.0)
+(shift = (1.8, -2.8), error = 0.9999999971143979, phasediff = 0.0)
 
 julia> @. isapprox(ans.shift, -1 * shift, atol=1/5)
 (true, true)
