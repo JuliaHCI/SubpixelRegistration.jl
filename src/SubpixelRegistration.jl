@@ -79,7 +79,6 @@ function phase_offset(plan, source_freq::AbstractMatrix{Complex{T}}, target_freq
     shift = @. shift + (maxidx.I - dftshift - idxoffset) / T(upsample_factor)
 
     stats = calculate_stats(maxima, source_freq, target_freq)
-    @show typeof(shift)
     return (;shift, stats...)
 end
 
@@ -101,7 +100,6 @@ function upsampled_dft(data::AbstractMatrix{Complex{T}}, region_size,
     freqs = fftfreq(size(data, 1), sample_rate)
     kernel = @. cis(T(2π) * (shiftrange - offsets[1] - idxoffset[1]) * freqs')
     _data = kernel * _data'
-    @show typeof(kernel)
     return _data
 end
 
