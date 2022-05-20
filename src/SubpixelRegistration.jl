@@ -44,7 +44,7 @@ end
 
 Returns the phase shift between the two images which have already been Fourier transformed with the given `plan`.
 """
-function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_freq; upsample_factor=1) where T
+function phase_offset(plan, source_freq::AbstractMatrix{Complex{T}}, target_freq; upsample_factor=1) where T
     # whole-pixel shift
     # compute cross-correlation via iFFT
     image_product = source_freq .* conj(target_freq)
@@ -61,24 +61,25 @@ function phase_offset(plan, source_freq::AbstractMatrix{<:Complex{T}}, target_fr
     # locate maximums
     maxima, maxidx = @compat findmax(abs, cross_correlation)
     shape = size(source_freq)
-    midpoints = map(ax -> (first(ax) + last(ax)) / 2, axes(source_freq))
+    midpoints = map(ax -> (first(ax) + last(ax)) / T(2), axes(source_freq))
     idxoffset = map(first, axes(cross_correlation))
-    shift = @. float(ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - idxoffset)
+    shift = @. T(ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - idxoffset)
 
     isone(upsample_factor) && return (;shift, calculate_stats(maxima, source_freq, target_freq)...)
 
     # upsample with matrix-multiply DFT
-    shift = @. round(shift * upsample_factor) / upsample_factor
-    upsample_region_size = ceil(upsample_factor * 1.5)
+    shift = @. round(shift * upsample_factor) / T(upsample_factor)
+    upsample_region_size = ceil(upsample_factor * T(1.5))
     # center of output array at dftshift + 1
     dftshift = div(upsample_region_size, 2)
     # matmul DFT
     sample_region_offset = @. dftshift - shift * upsample_factor
     cross_correlation = upsampled_dft(image_product, upsample_region_size, upsample_factor, sample_region_offset)
     maxima, maxidx = @compat findmax(abs, cross_correlation)
-    shift = @. shift + (maxidx.I - dftshift - idxoffset) / upsample_factor
+    shift = @. shift + (maxidx.I - dftshift - idxoffset) / T(upsample_factor)
 
     stats = calculate_stats(maxima, source_freq, target_freq)
+    @show typeof(shift)
     return (;shift, stats...)
 end
 
@@ -87,18 +88,20 @@ end
 
 Calculate the cross-correlation in a region of size `region_size` via an upsampled DFT. The DFT uses matrix-multiplication to super-sample the input by `upsample_factor`. The frequencies will be shifted and centered around `offsets`.
 """
-function upsampled_dft(data::AbstractMatrix{T}, region_size, upsample_factor, offsets) where {T<:Complex}
+function upsampled_dft(data::AbstractMatrix{Complex{T}}, region_size,
+                        upsample_factor, offsets) where T
     shiftrange = 1:region_size
     idxoffset = map(first, axes(data))
-    sample_rate = inv(upsample_factor)
+    sample_rate = inv(T(upsample_factor))
     freqs = fftfreq(size(data, 2), sample_rate)
-    kernel = @. cis(-2π * (shiftrange - offsets[2] - idxoffset[2]) * freqs')
+    kernel = @. cis(-T(2π) * (shiftrange - offsets[2] - idxoffset[2]) * freqs')
 
     _data = kernel * data'
 
     freqs = fftfreq(size(data, 1), sample_rate)
-    kernel = @. cis(2π * (shiftrange - offsets[1] - idxoffset[1]) * freqs')
+    kernel = @. cis(T(2π) * (shiftrange - offsets[1] - idxoffset[1]) * freqs')
     _data = kernel * _data'
+    @show typeof(kernel)
     return _data
 end
 
@@ -131,12 +134,13 @@ end
 
 Shift the given image, which is already in frequency-space, by `shift` along each axis. Modifies `image_freq` inplace.
 """
-function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift, phasediff=0)
+function fourier_shift!(image_freq::AbstractMatrix{Complex{T}}, 
+                        shift, phasediff=0) where T
     shape = size(image_freq)
 
     freqs1 = fftfreq(shape[1])
     freqs2 = fftfreq(shape[2])'
-    @. image_freq *= cis(-2π * (freqs1 * shift[1] + freqs2 * shift[2]) + phasediff)
+    @. image_freq *= cis(-T(2π) * (freqs1 * shift[1] + freqs2 * shift[2]) + phasediff)
     return image_freq
 end
 
