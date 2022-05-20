@@ -10,7 +10,10 @@ export phase_offset, register, coregister, coregister!, fourier_shift
 """
     phase_offset(source, target; upsample_factor=1)
 
-Return the shift between `source` and `target` along each axis by measuring the maximum in the cross-correlation between the images. This algorithm can achieve `1/upsample_factor` precision by locally upsampling the cross-correlation via a matrix-multiplication DFT.[^1]
+Return the shift between `source` and `target` along each axis by measuring 
+the maximum in the cross-correlation between the images. This algorithm can 
+achieve `1/upsample_factor` precision by locally upsampling the cross-correlation 
+via a matrix-multiplication DFT.[^1]
 
 # Examples
 
@@ -42,9 +45,11 @@ end
 """
     phase_offset(plan, source_freq, target_freq; upsample_factor=1)
 
-Returns the phase shift between the two images which have already been Fourier transformed with the given `plan`.
+Returns the phase shift between the two images which have already been
+Fourier transformed with the given `plan`.
 """
-function phase_offset(plan, source_freq::AbstractMatrix{Complex{T}}, target_freq; upsample_factor=1) where T
+function phase_offset(plan, source_freq::AbstractMatrix{Complex{T}}, 
+                      target_freq; upsample_factor=1) where T
     # whole-pixel shift
     # compute cross-correlation via iFFT
     image_product = source_freq .* conj(target_freq)
@@ -74,7 +79,8 @@ function phase_offset(plan, source_freq::AbstractMatrix{Complex{T}}, target_freq
     dftshift = div(upsample_region_size, 2)
     # matmul DFT
     sample_region_offset = @. dftshift - shift * upsample_factor
-    cross_correlation = upsampled_dft(image_product, upsample_region_size, upsample_factor, sample_region_offset)
+    cross_correlation = upsampled_dft(image_product, upsample_region_size,
+                                      upsample_factor, sample_region_offset)
     maxima, maxidx = @compat findmax(abs, cross_correlation)
     shift = @. shift + (maxidx.I - dftshift - idxoffset) / T(upsample_factor)
 
@@ -85,7 +91,9 @@ end
 """
     SubpixelRegistration.upsampled_dft(data, region_size, upsample_factor, offsets)
 
-Calculate the cross-correlation in a region of size `region_size` via an upsampled DFT. The DFT uses matrix-multiplication to super-sample the input by `upsample_factor`. The frequencies will be shifted and centered around `offsets`.
+Calculate the cross-correlation in a region of size `region_size` via an upsampled DFT. 
+The DFT uses matrix-multiplication to super-sample the input by `upsample_factor`. 
+The frequencies will be shifted and centered around `offsets`.
 """
 function upsampled_dft(data::AbstractMatrix{Complex{T}}, region_size,
                         upsample_factor, offsets) where T
@@ -106,7 +114,9 @@ end
 """
     SubpixelRegistration.calculate_stats(crosscor_maxima, source_freq, target_freq)
 
-Calculate the normalized root-mean-square error (NRMSE) and total phase difference between the two complex arrays, `source_freq` and `target_freq`, with maximum cross-correlation value `crosscor_maxima`
+Calculate the normalized root-mean-square error (NRMSE) and total phase difference 
+between the two complex arrays, `source_freq` and `target_freq`, with 
+maximum cross-correlation value `crosscor_maxima`
 """
 function calculate_stats(crosscor_maxima, source_freq, target_freq)
     source_amp = mean(abs2, source_freq)
@@ -130,7 +140,8 @@ end
 """
     fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift, phasediff=0)
 
-Shift the given image, which is already in frequency-space, by `shift` along each axis. Modifies `image_freq` inplace.
+Shift the given image, which is already in frequency-space, 
+by `shift` along each axis. Modifies `image_freq` in place.
 """
 function fourier_shift!(image_freq::AbstractMatrix{Complex{T}}, 
                         shift, phasediff=0) where T
@@ -145,7 +156,8 @@ end
 """
     register(source, target; upsample_factor=1)
 
-Register `target` image to `source` image by first finding the phase offset ([`phase_offset`](@ref)), and then Fourier shifting `target` with [`fourier_shift`](@ref).
+Register `target` image to `source` image by first finding the phase offset 
+([`phase_offset`](@ref)), and then Fourier shifting `target` with [`fourier_shift`](@ref).
 
 # Examples
 
@@ -174,7 +186,8 @@ end
 """
     coregister(cube; dims, refidx=firstindex(cube, dims), upsample_factor=1)
 
-Coregister a cube of data along `dims`, using the `refidx` slice as the source frame. Other keyword arguments will be passed to [`phase_offset`](@ref)
+Coregister a cube of data along `dims`, using the `refidx` slice as the source frame. 
+Other keyword arguments will be passed to [`phase_offset`](@ref)
 
 # See also
 [`coregister!`](@ref)
@@ -184,7 +197,7 @@ coregister(cube::AbstractArray; kwargs...) = coregister!(copy(cube); kwargs...)
 """
     coregister!(cube; dims, kwargs...)
 
-Coregister slices in `cube`, modifyingn it inplace.
+Coregister slices in `cube`, modifying it in place.
 
 # See also
 [`coregister`](@ref)
@@ -199,7 +212,7 @@ function coregister!(cube::AbstractArray; dims, refidx=firstindex(cube, dims), k
         # measure offset and fourier shift
         result = phase_offset(plan, source_freq, target_freq; kwargs...)
         fourier_shift!(target_freq, result.shift, result.phasediff)
-        # target is a view, update inplace
+        # target is a view, update in place
         target .= real.(plan \ target_freq)
     end
     return cube
