@@ -147,8 +147,8 @@ function fourier_shift!(image_freq::AbstractMatrix{Complex{T}},
                         shift, phasediff=0) where T
     shape = size(image_freq)
 
-    freqs1 = fftfreq(shape[1])
-    freqs2 = fftfreq(shape[2])'
+    freqs1 = fftfreq(shape[1], one(T))
+    freqs2 = fftfreq(shape[2], one(T))'
     @. image_freq *= cis(-T(2π) * (freqs1 * shift[1] + freqs2 * shift[2]) + phasediff)
     return image_freq
 end
