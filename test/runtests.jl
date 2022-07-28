@@ -10,7 +10,7 @@ source = Float64.(testimage("cameraman"))
 
 @testset "SubpixelRegistration.jl" begin
 
-    @testset "pixel shift" for _ in 1:100
+    @testset "pixel shift" for _ = 1:100
         shift = (rand(rng, -25:25), rand(rng, -25:25))
         shifted = @inferred fourier_shift(source, shift)
         result = @inferred phase_offset(source, shifted; upsample_factor = 1)
@@ -20,7 +20,7 @@ source = Float64.(testimage("cameraman"))
         @test registered ≈ fourier_shift(shifted, result.shift, result.phasediff)
     end
 
-    @testset "subpixel shift" for _ in 1:100
+    @testset "subpixel shift" for _ = 1:100
         shift = 10 .* randn(rng, 2)
         shifted = fourier_shift(source, shift)
 
@@ -34,7 +34,11 @@ source = Float64.(testimage("cameraman"))
 
     @testset "coregister" begin
         shifts = 10 .* randn(rng, 19, 2)
-        cube = cat(source, (fourier_shift(source, shift) for shift in eachrow(shifts))..., dims = 3)
+        cube = cat(
+            source,
+            (fourier_shift(source, shift) for shift in eachrow(shifts))...,
+            dims = 3,
+        )
         f = 100
         cube_shift = @inferred coregister(cube; dims = 3, upsample_factor = f)
         for slice in eachslice(cube_shift, dims = 3)
