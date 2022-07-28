@@ -48,13 +48,15 @@ end
 Returns the phase shift between the two images which have already been
 Fourier transformed with the given `plan`.
 """
-function phase_offset(plan, source_freq::AbstractMatrix{Complex{T}}, 
-                      target_freq; upsample_factor=1) where T
+function phase_offset(
+    plan,
+    source_freq::AbstractMatrix{<:Complex{T}},
+    target_freq;
+    upsample_factor = 1,
+) where {T}
     # whole-pixel shift
     # compute cross-correlation via iFFT
-    image_product = source_freq .* conj(target_freq)
-    # phase normalization
-    @. image_product /= max(abs(image_product), 100 * eps(T))
+    image_product = @. source_freq * conj(target_freq)
     # ifft to calculate cross correlation
     if isone(upsample_factor)
         # no upsampling means we can modify this array
@@ -62,7 +64,6 @@ function phase_offset(plan, source_freq::AbstractMatrix{Complex{T}},
     else
         cross_correlation = plan \ image_product
     end
-
     # locate maximums
     maxima, maxidx = @compat findmax(abs, cross_correlation)
     shape = size(source_freq)
@@ -70,7 +71,8 @@ function phase_offset(plan, source_freq::AbstractMatrix{Complex{T}},
     idxoffset = map(first, axes(cross_correlation))
     shift = @. T(ifelse(maxidx.I > midpoints, maxidx.I - shape, maxidx.I) - idxoffset)
 
-    isone(upsample_factor) && return (;shift, calculate_stats(maxima, source_freq, target_freq)...)
+    isone(upsample_factor) &&
+        return (; shift, calculate_stats(maxima, source_freq, target_freq)...)
 
     # upsample with matrix-multiply DFT
     shift = @. round(shift * upsample_factor) / T(upsample_factor)
@@ -79,13 +81,17 @@ function phase_offset(plan, source_freq::AbstractMatrix{Complex{T}},
     dftshift = div(upsample_region_size, 2)
     # matmul DFT
     sample_region_offset = @. dftshift - shift * upsample_factor
-    cross_correlation = upsampled_dft(image_product, upsample_region_size,
-                                      upsample_factor, sample_region_offset)
+    cross_correlation = upsampled_dft(
+        image_product,
+        upsample_region_size,
+        upsample_factor,
+        sample_region_offset,
+    )
     maxima, maxidx = @compat findmax(abs, cross_correlation)
     shift = @. shift + (maxidx.I - dftshift - idxoffset) / T(upsample_factor)
 
     stats = calculate_stats(maxima, source_freq, target_freq)
-    return (;shift, stats...)
+    return (; shift, stats...)
 end
 
 """
@@ -95,8 +101,12 @@ Calculate the cross-correlation in a region of size `region_size` via an upsampl
 The DFT uses matrix-multiplication to super-sample the input by `upsample_factor`. 
 The frequencies will be shifted and centered around `offsets`.
 """
-function upsampled_dft(data::AbstractMatrix{Complex{T}}, region_size,
-                        upsample_factor, offsets) where T
+function upsampled_dft(
+    data::AbstractMatrix{T},
+    region_size,
+    upsample_factor,
+    offsets,
+) where {T<:Complex}
     shiftrange = 1:region_size
     idxoffset = map(first, axes(data))
     sample_rate = inv(T(upsample_factor))
@@ -143,8 +153,7 @@ end
 Shift the given image, which is already in frequency-space, 
 by `shift` along each axis. Modifies `image_freq` in place.
 """
-function fourier_shift!(image_freq::AbstractMatrix{Complex{T}}, 
-                        shift, phasediff=0) where T
+function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift, phasediff = 0)
     shape = size(image_freq)
 
     freqs1 = fftfreq(shape[1], one(T))
@@ -202,11 +211,11 @@ Coregister slices in `cube`, modifying it in place.
 # See also
 [`coregister`](@ref)
 """
-function coregister!(cube::AbstractArray; dims, refidx=firstindex(cube, dims), kwargs...)
+function coregister!(cube::AbstractArray; dims, refidx = firstindex(cube, dims), kwargs...)
     source = selectdim(cube, dims, refidx)
     plan = plan_fft(source)
     source_freq = plan * source
-    @inbounds for idx in axes(cube, dims)[begin + 1:end]
+    @inbounds for idx in axes(cube, dims)[begin+1:end]
         target = selectdim(cube, dims, idx)
         target_freq = plan * target
         # measure offset and fourier shift
