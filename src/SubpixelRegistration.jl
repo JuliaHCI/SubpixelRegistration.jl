@@ -8,12 +8,12 @@ using Statistics
 export phase_offset, register, coregister, coregister!, fourier_shift
 
 """
-    phase_offset(source, target; upsample_factor=1)
+    phase_offset(source, target; upsample_factor=1, normalize=false)
 
-Return the shift between `source` and `target` along each axis by measuring 
-the maximum in the cross-correlation between the images. This algorithm can 
-achieve `1/upsample_factor` precision by locally upsampling the cross-correlation 
-via a matrix-multiplication DFT.[^1]
+Return the shift between `source` and `target` along each axis by measuring
+the maximum in the cross-correlation between the images. This algorithm can
+achieve `1/upsample_factor` precision by locally upsampling the cross-correlation
+via a matrix-multiplication DFT.[^1] If `normalize` is `true`, the phase of the cross-correlation in Fourier space is divided by its magnitude. In some applications, phase normalization can increase performance, but usually at a trade-off for worse low-noise performance.
 
 # Examples
 
@@ -26,10 +26,13 @@ julia> shift = (-1.6, 2.8)
 julia> target = fourier_shift(image, shift);
 
 julia> phase_offset(image, target)
-(shift = (2.0, -3.0), error = 0.9999999999997542, phasediff = 0.0)
+(shift = (2.0, -3.0), error = 0.013095117382042387, phasediff = 0.0)
 
 julia> phase_offset(image, target; upsample_factor=5)
-(shift = (1.8, -2.8), error = 0.9999999971143979, phasediff = 0.0)
+(shift = (1.6, -2.8), error = -9972.926257260056, phasediff = 0.0)
+
+julia> phase_offset(image, target; upsample_factor=5, normalize=true)
+(shift = (1.6, -2.8), error = -9972.926257260056, phasediff = 0.0)
 
 julia> @. isapprox(ans.shift, -1 * shift, atol=1/5)
 (true, true)
@@ -43,7 +46,7 @@ function phase_offset(source::AbstractArray, target::AbstractArray; kwargs...)
 end
 
 """
-    phase_offset(plan, source_freq, target_freq; upsample_factor=1)
+    phase_offset(plan, source_freq, target_freq; upsample_factor=1, normalize=false)
 
 Returns the phase shift between the two images which have already been
 Fourier transformed with the given `plan`.
@@ -53,10 +56,16 @@ function phase_offset(
     source_freq::AbstractMatrix{<:Complex{T}},
     target_freq;
     upsample_factor = 1,
+    normalize = false,
 ) where {T}
     # whole-pixel shift
     # compute cross-correlation via iFFT
     image_product = @. source_freq * conj(target_freq)
+    # phase-normalization
+    if normalize
+        # add eps to avoid NaN
+        @. image_product /= max(abs(image_product), eps(T))
+    end
     # ifft to calculate cross correlation
     if isone(upsample_factor)
         # no upsampling means we can modify this array
@@ -97,8 +106,8 @@ end
 """
     SubpixelRegistration.upsampled_dft(data, region_size, upsample_factor, offsets)
 
-Calculate the cross-correlation in a region of size `region_size` via an upsampled DFT. 
-The DFT uses matrix-multiplication to super-sample the input by `upsample_factor`. 
+Calculate the cross-correlation in a region of size `region_size` via an upsampled DFT.
+The DFT uses matrix-multiplication to super-sample the input by `upsample_factor`.
 The frequencies will be shifted and centered around `offsets`.
 """
 function upsampled_dft(
@@ -124,8 +133,8 @@ end
 """
     SubpixelRegistration.calculate_stats(crosscor_maxima, source_freq, target_freq)
 
-Calculate the normalized root-mean-square error (NRMSE) and total phase difference 
-between the two complex arrays, `source_freq` and `target_freq`, with 
+Calculate the normalized root-mean-square error (NRMSE) and total phase difference
+between the two complex arrays, `source_freq` and `target_freq`, with
 maximum cross-correlation value `crosscor_maxima`
 """
 function calculate_stats(crosscor_maxima, source_freq, target_freq)
@@ -150,10 +159,14 @@ end
 """
     fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift, phasediff=0)
 
-Shift the given image, which is already in frequency-space, 
+Shift the given image, which is already in frequency-space,
 by `shift` along each axis. Modifies `image_freq` in place.
 """
-function fourier_shift!(image_freq::AbstractMatrix{<:Complex{T}}, shift, phasediff = 0) where T
+function fourier_shift!(
+    image_freq::AbstractMatrix{<:Complex{T}},
+    shift,
+    phasediff = 0,
+) where {T}
     shape = size(image_freq)
 
     freqs1 = fftfreq(shape[1], one(T))
@@ -165,7 +178,7 @@ end
 """
     register(source, target; upsample_factor=1)
 
-Register `target` image to `source` image by first finding the phase offset 
+Register `target` image to `source` image by first finding the phase offset
 ([`phase_offset`](@ref)), and then Fourier shifting `target` with [`fourier_shift`](@ref).
 
 # Examples
@@ -195,7 +208,7 @@ end
 """
     coregister(cube; dims, refidx=firstindex(cube, dims), upsample_factor=1)
 
-Coregister a cube of data along `dims`, using the `refidx` slice as the source frame. 
+Coregister a cube of data along `dims`, using the `refidx` slice as the source frame.
 Other keyword arguments will be passed to [`phase_offset`](@ref)
 
 # See also
