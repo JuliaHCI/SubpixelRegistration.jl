@@ -153,7 +153,7 @@ end
 Shift the given image, which is already in frequency-space, 
 by `shift` along each axis. Modifies `image_freq` in place.
 """
-function fourier_shift!(image_freq::AbstractMatrix{<:Complex}, shift, phasediff = 0)
+function fourier_shift!(image_freq::AbstractMatrix{<:Complex{T}}, shift, phasediff = 0) where T
     shape = size(image_freq)
 
     freqs1 = fftfreq(shape[1], one(T))
