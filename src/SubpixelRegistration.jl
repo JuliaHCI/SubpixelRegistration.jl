@@ -32,7 +32,7 @@ julia> phase_offset(image, target; upsample_factor=5)
 (shift = (1.6, -2.8), error = -9972.926257260056, phasediff = 0.0)
 
 julia> phase_offset(image, target; upsample_factor=5, normalize=true)
-(shift = (1.6, -2.8), error = -9972.926257260056, phasediff = 0.0)
+(shift = (1.8, -2.8), error = 0.9999999971143979, phasediff = 0.0)
 
 julia> @. isapprox(ans.shift, -1 * shift, atol=1/5)
 (true, true)
